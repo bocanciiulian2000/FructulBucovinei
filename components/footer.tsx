@@ -163,7 +163,7 @@ export function Footer() {
 
       <div className="relative z-20 mt-16 bg-muted">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-6 py-5 text-sm text-forest/80 lg:flex-row lg:px-12">
-          <p>Fructul Bucovinei © {new Date().getFullYear()} - Design de Visual Edge</p>
+          <p>Fructul Bucovinei © {new Date().getFullYear()}</p>
           <div className="flex flex-wrap items-center justify-center gap-6">
             <Link href="#" className="hover:text-burgundy">
               GDPR
