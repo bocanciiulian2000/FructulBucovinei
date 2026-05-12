@@ -85,7 +85,7 @@ export function Navbar() {
             {/* User & Cart Icons */}
             <div className="flex items-center gap-1">
               <button
-                className={`hidden lg:flex p-2.5 rounded-full transition-all duration-300 ${
+                className={`flex p-2.5 rounded-full transition-all duration-300 ${
                   isScrolled 
                     ? 'text-forest/60 hover:text-burgundy hover:bg-forest/5' 
                     : 'text-cream/70 hover:text-cream hover:bg-cream/10'
@@ -95,7 +95,7 @@ export function Navbar() {
                 <User size={18} strokeWidth={1.5} />
               </button>
               <button
-                className={`hidden lg:flex p-2.5 rounded-full transition-all duration-300 ${
+                className={`flex p-2.5 rounded-full transition-all duration-300 ${
                   isScrolled 
                     ? 'text-forest/60 hover:text-burgundy hover:bg-forest/5' 
                     : 'text-cream/70 hover:text-cream hover:bg-cream/10'
@@ -154,25 +154,6 @@ export function Navbar() {
                   </Link>
                 </motion.div>
               ))}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="flex items-center gap-4 mt-8"
-              >
-                <button
-                  className="p-3 text-forest/60 hover:text-burgundy transition-colors duration-300"
-                  aria-label="Contul meu"
-                >
-                  <User size={24} strokeWidth={1.5} />
-                </button>
-                <button
-                  className="p-3 text-forest/60 hover:text-burgundy transition-colors duration-300"
-                  aria-label="Coș de cumpărături"
-                >
-                  <ShoppingCart size={24} strokeWidth={1.5} />
-                </button>
-              </motion.div>
             </motion.nav>
           </motion.div>
         )}

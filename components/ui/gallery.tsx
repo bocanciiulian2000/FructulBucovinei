@@ -3,7 +3,6 @@
 import { Ref, forwardRef, useEffect, useState } from 'react'
 import Image, { ImageProps } from 'next/image'
 import { motion, useMotionValue } from 'framer-motion'
-import { ArrowRight } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -96,6 +95,30 @@ const photos = [
   },
 ]
 
+const mobilePhotos = [
+  {
+    ...photos[2],
+    order: 0,
+    mobileX: '-84px',
+    mobileY: '28px',
+    zIndex: 30,
+  },
+  {
+    ...photos[3],
+    order: 1,
+    mobileX: '0px',
+    mobileY: '0px',
+    zIndex: 50,
+  },
+  {
+    ...photos[4],
+    order: 2,
+    mobileX: '84px',
+    mobileY: '32px',
+    zIndex: 20,
+  },
+]
+
 export const PhotoGallery = ({
   animationDelay = 0.2,
 }: {
@@ -130,7 +153,8 @@ export const PhotoGallery = ({
     }
   }, [animationDelay])
 
-  const photoSize = isMobile ? 188 : 310
+  const displayedPhotos = isMobile ? mobilePhotos : photos
+  const photoSize = isMobile ? 150 : 310
 
   const containerVariants = {
     hidden: { opacity: 1 },
@@ -166,8 +190,8 @@ export const PhotoGallery = ({
   }
 
   return (
-    <div className="relative overflow-visible pb-4 pt-14 md:pt-18">
-      <div className="relative mb-10 h-[330px] w-full items-center justify-center md:h-[500px] lg:flex">
+    <div className="relative overflow-hidden pb-0 pt-6 md:overflow-visible md:pb-4 md:pt-18">
+      <div className="relative h-[230px] w-full items-center justify-center md:mb-10 md:h-[500px] md:block lg:flex">
         <motion.div
           className="relative mx-auto flex w-full max-w-7xl justify-center"
           initial={{ opacity: 0 }}
@@ -184,7 +208,7 @@ export const PhotoGallery = ({
               className="relative"
               style={{ height: photoSize, width: photoSize }}
             >
-              {[...photos].reverse().map((photo) => (
+              {[...displayedPhotos].reverse().map((photo) => (
                 <motion.div
                   key={photo.id}
                   className="absolute left-0 top-0"
@@ -214,16 +238,6 @@ export const PhotoGallery = ({
             </div>
           </motion.div>
         </motion.div>
-      </div>
-
-      <div className="flex w-full justify-center">
-        <a
-          href="#galerie"
-          className="group inline-flex items-center gap-3 rounded-sm bg-burgundy px-8 py-4 text-sm font-semibold uppercase tracking-wide text-cream transition-all duration-500 hover:gap-4 hover:bg-forest"
-        >
-          <span>GALERIE FOTO</span>
-          <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
-        </a>
       </div>
     </div>
   )

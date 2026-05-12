@@ -14,7 +14,7 @@ export function IntroSection() {
       ref={sectionRef}
       className="relative z-20 flex min-h-[680px] items-center overflow-visible bg-cream py-24 lg:min-h-[720px] lg:py-0"
     >
-      <div className="pointer-events-none absolute inset-x-0 -bottom-36 top-0 z-0 lg:-bottom-56">
+      <div className="pointer-events-none absolute inset-x-0 -bottom-20 -top-16 z-0 sm:-bottom-36 sm:top-0 lg:-bottom-56">
         <Image
           src="/imagini_landing-page/poza_fructulbucovinei_prima-sectiune.png"
           alt="Livada Fructul Bucovinei"
