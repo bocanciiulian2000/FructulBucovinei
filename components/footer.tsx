@@ -83,80 +83,116 @@ export function Footer() {
             ))}
           </nav>
 
-          <div className="flex items-center justify-center gap-5 lg:justify-end">
-            <Image
-              src="/logo&favicon/logofructulbucovinei.png"
-              alt="Fructul Bucovinei"
-              width={132}
-              height={122}
-              className="h-auto w-36 lg:w-48"
-            />
-            <div className="flex flex-col gap-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target={social.href.startsWith('http') ? '_blank' : undefined}
-                  rel={social.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className="flex size-10 items-center justify-center rounded-full bg-forest text-cream transition-colors hover:bg-burgundy"
-                  aria-label={social.label}
-                >
-                  <social.icon size={18} strokeWidth={2} />
-                </a>
-              ))}
+          <div className="flex flex-col items-center gap-5 lg:items-end">
+            <div className="flex items-center justify-center gap-5 lg:justify-end">
+              <Image
+                src="/logo&favicon/logofructulbucovinei.png"
+                alt="Fructul Bucovinei"
+                width={132}
+                height={122}
+                className="h-auto w-36 lg:w-48"
+              />
+              <div className="flex flex-col gap-3">
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target={social.href.startsWith('http') ? '_blank' : undefined}
+                    rel={social.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    className="flex size-10 items-center justify-center rounded-full bg-forest text-cream transition-colors hover:bg-burgundy"
+                    aria-label={social.label}
+                  >
+                    <social.icon size={18} strokeWidth={2} />
+                  </a>
+                ))}
+              </div>
             </div>
+
           </div>
         </div>
 
-        <div className="mx-auto mt-16 grid max-w-5xl gap-10 text-center md:grid-cols-3 lg:items-start">
-          <div>
-            <h3 className="font-serif text-xl font-bold text-brown">
-              Loren Ipsum
-            </h3>
-            <ul className="mt-3 space-y-2 text-base text-forest/80">
-              {productLinks.map((label) => (
-                <li key={label}>{label}</li>
-              ))}
-            </ul>
+        <div className="mx-auto mt-14 grid max-w-5xl gap-10 lg:grid-cols-[1fr_auto] lg:items-start">
+          <div className="grid gap-10 text-left md:grid-cols-3 lg:max-w-3xl">
+            <div>
+              <h3 className="font-serif text-xl font-bold text-brown">
+                Loren Ipsum
+              </h3>
+              <ul className="mt-3 space-y-2 text-base text-forest/80">
+                {productLinks.map((label) => (
+                  <li key={label}>{label}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-serif text-xl font-bold text-brown">
+                Loren Ipsum
+              </h3>
+              <ul className="mt-3 space-y-2 text-base text-forest/80">
+                {corporateLinks.map((label) => (
+                  <li key={label}>{label}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-serif text-xl font-bold text-brown">Contact</h3>
+              <ul className="mt-3 space-y-3 text-base text-forest/80">
+                <li className="flex items-start gap-3">
+                  <MapPin size={20} className="mt-0.5 shrink-0 text-brown" />
+                  <span>Suceava, Bucovina, România</span>
+                </li>
+                <li>
+                  <a
+                    href="tel:+40700000000"
+                    className="flex items-center gap-3 hover:text-burgundy"
+                  >
+                    <Phone size={18} className="shrink-0 text-brown" />
+                    +40 700 000 000
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="mailto:contact@fructulbucovinei.ro"
+                    className="flex items-center gap-3 hover:text-burgundy"
+                  >
+                    <Mail size={18} className="shrink-0 text-brown" />
+                    contact@fructulbucovinei.ro
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div>
-            <h3 className="font-serif text-xl font-bold text-brown">
-              Loren Ipsum
-            </h3>
-            <ul className="mt-3 space-y-2 text-base text-forest/80">
-              {corporateLinks.map((label) => (
-                <li key={label}>{label}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-serif text-xl font-bold text-brown">Contact</h3>
-            <ul className="mt-3 space-y-3 text-base text-forest/80">
-              <li className="flex items-start justify-center gap-3">
-                <MapPin size={20} className="mt-0.5 shrink-0 text-brown" />
-                <span>Suceava, Bucovina, România</span>
-              </li>
-              <li>
-                <a
-                  href="tel:+40700000000"
-                  className="flex items-center justify-center gap-3 hover:text-burgundy"
-                >
-                  <Phone size={18} className="shrink-0 text-brown" />
-                  +40 700 000 000
-                </a>
-              </li>
-              <li>
-                <a
-                  href="mailto:contact@fructulbucovinei.ro"
-                  className="flex items-center justify-center gap-3 hover:text-burgundy"
-                >
-                  <Mail size={18} className="shrink-0 text-brown" />
-                  contact@fructulbucovinei.ro
-                </a>
-              </li>
-            </ul>
+          <div className="flex flex-col items-center gap-4 lg:w-72 lg:items-end">
+            <a
+              href="https://anpc.ro/ce-este-sal/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="ANPC SAL"
+            >
+              <Image
+                src="/legal/anpc-sal.webp"
+                alt="Soluționarea alternativă a litigiilor ANPC"
+                width={250}
+                height={66}
+                className="h-auto w-56 lg:w-64"
+              />
+            </a>
+            <a
+              href="https://ec.europa.eu/consumers/odr"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="ANPC SOL"
+            >
+              <Image
+                src="/legal/anpc-sol.webp"
+                alt="Soluționarea online a litigiilor"
+                width={250}
+                height={66}
+                className="h-auto w-56 lg:w-64"
+              />
+            </a>
           </div>
         </div>
       </div>

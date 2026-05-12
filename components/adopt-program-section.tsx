@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { ArrowRight, CalendarHeart, PackageCheck, Sprout } from 'lucide-react'
 
 const programHighlights = [
@@ -21,7 +22,17 @@ const programHighlights = [
 export function AdoptProgramSection() {
   return (
     <section className="relative z-10 overflow-visible bg-cream py-16 text-forest lg:py-24">
-      <div className="container mx-auto px-6 lg:px-12">
+      <div className="pointer-events-none absolute right-0 -top-44 z-0 hidden h-[132%] w-[50%] overflow-visible lg:block">
+        <Image
+          src="/imagini_landing-page/poza_fructulbucovinei_footer.png"
+          alt=""
+          fill
+          className="scale-x-[-1] object-cover object-right opacity-80"
+          sizes="50vw"
+        />
+      </div>
+
+      <div className="container relative z-10 mx-auto px-6 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
           <div>
             <h2 className="font-serif text-6xl font-bold leading-[0.98] text-forest text-balance md:text-7xl lg:text-8xl">
