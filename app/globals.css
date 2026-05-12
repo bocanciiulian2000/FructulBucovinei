@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Brand Colors - Fructul Bucovinei */
+  --burgundy: #7a091a;
+  --brown: #7A5C46;
+  --cream: #F4EBDD;
+  --forest: #22382D;
+  
+  /* Semantic Tokens */
+  --background: #F4EBDD;
+  --foreground: #22382D;
+  --card: #ffffff;
+  --card-foreground: #22382D;
+  --popover: #ffffff;
+  --popover-foreground: #22382D;
+  --primary: #7a091a;
+  --primary-foreground: #F4EBDD;
+  --secondary: #7A5C46;
+  --secondary-foreground: #F4EBDD;
+  --muted: #e8dfd0;
+  --muted-foreground: #7A5C46;
+  --accent: #22382D;
+  --accent-foreground: #F4EBDD;
+  --destructive: #7a091a;
+  --destructive-foreground: #F4EBDD;
+  --border: rgba(122, 92, 70, 0.2);
+  --input: rgba(122, 92, 70, 0.2);
+  --ring: #7a091a;
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --font-sans: 'Manrope', sans-serif;
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-mono: 'Geist Mono', monospace;
+  
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Custom brand colors for Tailwind */
+  --color-burgundy: #7a091a;
+  --color-brown: #7A5C46;
+  --color-cream: #F4EBDD;
+  --color-forest: #22382D;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  html.lenis, html.lenis body {
+    height: auto;
+  }
+  
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+  
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+  
+  .lenis.lenis-scrolling iframe {
+    pointer-events: none;
+  }
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
