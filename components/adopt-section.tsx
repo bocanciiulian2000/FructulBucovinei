@@ -58,7 +58,7 @@ export function AdoptSection() {
           {packages.map((pkg) => (
             <div
               key={pkg.id}
-              className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500"
+              className="group relative overflow-hidden rounded-2xl bg-[#fbf7ee] shadow-sm transition-all duration-500 hover:shadow-xl"
             >
               {/* Image Container */}
               <div className="relative aspect-[4/3] overflow-hidden">
@@ -75,13 +75,8 @@ export function AdoptSection() {
 
               {/* Content */}
               <div className="p-6 lg:p-8">
-                {/* Subtitle */}
-                <span className="text-burgundy/70 text-xs tracking-widest uppercase font-semibold">
-                  {pkg.subtitle}
-                </span>
-                
                 {/* Title */}
-                <h3 className="font-serif text-2xl lg:text-3xl text-forest font-semibold mt-2 mb-3">
+                <h3 className="font-serif text-2xl lg:text-3xl text-forest font-semibold mb-3">
                   {pkg.name}
                 </h3>
                 
