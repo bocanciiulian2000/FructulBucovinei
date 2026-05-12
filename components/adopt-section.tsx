@@ -8,22 +8,19 @@ import { ArrowRight } from 'lucide-react'
 const packages = [
   {
     id: 1,
-    name: 'Pachet Standard',
-    subtitle: 'Pentru început',
+    name: 'Loren Ipsum',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.',
     image: '/images/tree-apple.jpg',
   },
   {
     id: 2,
-    name: 'Pachet Familie',
-    subtitle: 'Cel mai popular',
+    name: 'Loren Ipsum',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.',
     image: '/images/tree-pear.jpg',
   },
   {
     id: 3,
-    name: 'Pachet Premium',
-    subtitle: 'Experiența completă',
+    name: 'Loren Ipsum',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.',
     image: '/images/tree-plum.jpg',
   },
