@@ -3,29 +3,63 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, User, ShoppingCart } from 'lucide-react'
 
 const navLinks = [
-  { href: '#intro', label: 'Acasă' },
-  { href: '#adopta', label: 'Adoptă un pom' },
-  { href: '#evenimente', label: 'Evenimente' },
-  { href: '#galerie', label: 'Galerie' },
-  { href: '#cta', label: 'Comandă' },
+  { href: '/', label: 'Acasă' },
+  { href: '/#adopta', label: 'Adoptă un pom' },
+  { href: '/#evenimente', label: 'Evenimente' },
+  { href: '/galerie', label: 'Galerie' },
+  { href: '/#cta', label: 'Comandă' },
 ]
 
 export function Navbar() {
+  const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState('/')
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
+
+      if (pathname !== '/') {
+        setActiveSection(pathname)
+        return
+      }
+
+      if (window.scrollY < 240) {
+        setActiveSection('/')
+        return
+      }
+
+      const currentLink = navLinks.findLast((link) => {
+        const sectionId = link.href.split('#')[1]
+
+        if (!sectionId) {
+          return false
+        }
+
+        const section = document.querySelector(`#${sectionId}`)
+
+        if (!section) {
+          return false
+        }
+
+        return section.getBoundingClientRect().top <= 180
+      })
+
+      if (currentLink) {
+        setActiveSection(currentLink.href)
+      }
     }
 
+    handleScroll()
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [pathname])
 
   return (
     <>
@@ -64,22 +98,30 @@ export function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`relative text-sm font-medium transition-colors duration-300 group ${
-                    isScrolled 
-                      ? 'text-forest/70 hover:text-forest' 
-                      : 'text-cream/80 hover:text-cream'
-                  }`}
-                >
-                  {link.label}
-                  <span className={`absolute -bottom-1 left-0 w-0 h-px transition-all duration-300 group-hover:w-full ${
-                    isScrolled ? 'bg-burgundy' : 'bg-cream'
-                  }`} />
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = activeSection === link.href
+
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`relative text-sm font-medium transition-colors duration-300 group ${
+                      isActive
+                        ? isScrolled
+                          ? 'text-burgundy'
+                          : 'text-cream'
+                        : isScrolled
+                          ? 'text-forest/70 hover:text-forest'
+                          : 'text-cream/80 hover:text-cream'
+                    }`}
+                  >
+                    {link.label}
+                    <span className={`absolute -bottom-1 left-0 h-px transition-all duration-300 group-hover:w-full ${
+                      isActive ? 'w-full' : 'w-0'
+                    } ${isScrolled ? 'bg-burgundy' : 'bg-cream'}`} />
+                  </Link>
+                )
+              })}
             </div>
 
             {/* User & Cart Icons */}
@@ -138,22 +180,31 @@ export function Navbar() {
               transition={{ duration: 0.4, delay: 0.1 }}
               className="relative flex flex-col items-center justify-center h-full gap-8"
             >
-              {navLinks.map((link, index) => (
-                <motion.div
-                  key={link.href}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + index * 0.05 }}
-                >
-                  <Link
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="font-serif text-2xl text-forest transition-colors duration-300 hover:text-burgundy"
+              {navLinks.map((link, index) => {
+                const isActive = activeSection === link.href
+
+                return (
+                  <motion.div
+                    key={link.href}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + index * 0.05 }}
                   >
-                    {link.label}
-                  </Link>
-                </motion.div>
-              ))}
+                    <Link
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`relative font-serif text-4xl transition-colors duration-300 hover:text-burgundy ${
+                        isActive ? 'text-burgundy' : 'text-forest'
+                      }`}
+                    >
+                      {link.label}
+                      {isActive && (
+                        <span className="absolute -bottom-2 left-1/2 h-0.5 w-10 -translate-x-1/2 rounded-full bg-burgundy" />
+                      )}
+                    </Link>
+                  </motion.div>
+                )
+              })}
             </motion.nav>
           </motion.div>
         )}
