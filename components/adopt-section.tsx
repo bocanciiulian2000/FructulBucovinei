@@ -76,19 +76,19 @@ export function AdoptSection() {
       ref={sectionRef}
       className="relative py-16 lg:py-24 bg-cream overflow-hidden"
     >
-      <div className="container mx-auto px-6 lg:px-12 relative z-10">
+      <div className="container relative z-30 mx-auto px-6 lg:px-12">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12 lg:mb-16"
+          className="mb-10 text-center lg:mb-16"
         >
-          <h2 className="font-serif text-6xl md:text-7xl lg:text-8xl text-forest font-bold text-balance max-w-4xl mx-auto leading-[0.98]">
+          <h2 className="mx-auto max-w-4xl font-serif text-5xl font-bold leading-[0.98] text-forest text-balance md:text-7xl lg:text-8xl">
             Alege unul din{' '}
             <span className="text-burgundy">pachetele noastre</span>
           </h2>
-          <p className="text-earth mt-5 max-w-2xl mx-auto text-xl leading-relaxed">
+          <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-earth md:mt-5 md:text-xl">
             Alege unul din pachetele Fructul Bucovinei și bucură-te de fructele livezii noastre, crescute cu grijă.
           </p>
         </motion.div>
@@ -176,7 +176,7 @@ function PackageCard({ pkg }: { pkg: Package }) {
       </div>
 
       <div className="p-6 lg:p-8">
-        <h3 className="mb-3 font-serif text-2xl font-semibold text-forest lg:text-3xl">
+        <h3 className="mb-3 font-serif text-xl font-semibold text-forest md:text-2xl lg:text-3xl">
           {pkg.name}
         </h3>
 
@@ -186,7 +186,7 @@ function PackageCard({ pkg }: { pkg: Package }) {
 
         <div className="flex items-end justify-between border-t border-forest/5 pt-4">
           <div className="flex items-baseline gap-1">
-            <span className="font-serif text-3xl font-semibold text-burgundy">
+            <span className="font-serif text-2xl font-semibold text-burgundy md:text-3xl">
               xxx
             </span>
             <span className="text-sm font-medium text-earth/60">
@@ -194,7 +194,7 @@ function PackageCard({ pkg }: { pkg: Package }) {
             </span>
           </div>
 
-          <button className="group/btn flex items-center gap-2 rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-cream transition-all duration-300 hover:gap-3 hover:bg-burgundy">
+          <button className="group/btn flex items-center gap-2 rounded-full bg-forest px-4 py-2 text-xs font-semibold text-cream transition-all duration-300 hover:gap-3 hover:bg-burgundy md:px-5 md:py-2.5 md:text-sm">
             <span>Adoptă</span>
             <ArrowRight size={14} className="transition-transform duration-300 group-hover/btn:translate-x-0.5" />
           </button>

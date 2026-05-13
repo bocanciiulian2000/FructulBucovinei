@@ -17,6 +17,12 @@ const primaryLinks = [
   { label: 'Comandă', href: '#cta' },
 ]
 
+const mobilePrimaryLinks = [
+  { label: 'Produse', href: '#adopta' },
+  { label: 'Contact', href: '#contact' },
+  { label: 'Blog', href: '#' },
+]
+
 const productLinks = [
   'Lorem ipsum',
   'Dolor sit amet',
@@ -44,29 +50,103 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer id="contact" className="relative overflow-visible bg-cream text-forest">
-      <div className="pointer-events-none absolute left-0 top-0 z-0 h-full w-[46%] overflow-hidden">
+    <footer id="contact" className="relative overflow-visible bg-[#eadfcd] text-forest">
+      <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-[clamp(16rem,72vw,22rem)] overflow-hidden lg:w-[clamp(20rem,46vw,42rem)]">
         <Image
           src="/imagini_landing-page/poza_fructulbucovinei_footer.png"
           alt=""
           fill
           className="object-cover object-right"
-          sizes="46vw"
+          sizes="(max-width: 1024px) 320px, 46vw"
         />
       </div>
 
-      <div className="pointer-events-none absolute right-24 -top-20 z-0 hidden h-[470px] w-[470px] -rotate-[30deg] overflow-visible lg:block xl:right-32 xl:-top-28 xl:h-[560px] xl:w-[560px]">
+      <div className="pointer-events-none absolute z-10 h-[clamp(12rem,54vw,16rem)] w-[clamp(12rem,54vw,16rem)] -right-[clamp(3rem,12vw,4.5rem)] -top-[clamp(2rem,7vw,3rem)] -rotate-[30deg] overflow-visible lg:h-[clamp(28rem,29vw,35rem)] lg:w-[clamp(28rem,29vw,35rem)] lg:right-[clamp(6rem,7vw,8rem)] lg:-top-[clamp(5rem,7vw,7rem)]">
         <Image
           src="/imagini_landing-page/poza_fructulbucovinei_footer2.png"
           alt=""
           fill
           className="object-contain"
-          sizes="560px"
+          sizes="(max-width: 1024px) 58vw, (max-width: 1440px) 470px, 29vw"
         />
       </div>
 
-      <div className="container relative z-10 mx-auto px-6 pb-0 pt-16 lg:px-12 lg:pt-20">
-        <div className="mx-auto grid max-w-5xl gap-12 lg:grid-cols-[1.4fr_0.6fr] lg:items-start">
+      <div className="container relative z-30 mx-auto px-6 pt-8 lg:hidden">
+        <div className="flex items-center justify-between gap-5">
+          <Image
+            src="/logo&favicon/logofructulbucovinei.png"
+            alt="Fructul Bucovinei"
+            width={132}
+            height={122}
+            className="h-auto w-55"
+          />
+
+          <div className="flex flex-col items-center gap-3">
+            {socialLinks.map((social) => (
+              <a
+                key={social.label}
+                href={social.href}
+                target={social.href.startsWith('http') ? '_blank' : undefined}
+                rel={social.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                className="flex size-10 items-center justify-center rounded-full bg-forest text-cream transition-colors hover:bg-burgundy"
+                aria-label={social.label}
+              >
+                <social.icon size={18} strokeWidth={2} />
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <nav aria-label="Footer navigation mobil" className="mt-7">
+          {mobilePrimaryLinks.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className="group flex items-center justify-between border-b border-brown/45 py-2.5 font-serif text-2xl font-bold uppercase leading-none text-brown transition-colors hover:text-burgundy"
+            >
+              <span>{link.label}</span>
+              <ArrowRight
+                size={26}
+                className="transition-transform duration-300 group-hover:translate-x-2"
+              />
+            </Link>
+          ))}
+        </nav>
+
+        <div className="mt-7 grid grid-cols-2 items-center gap-3">
+          <a
+            href="https://anpc.ro/ce-este-sal/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="ANPC SAL"
+          >
+            <Image
+              src="/legal/anpc-sal.webp"
+              alt="Soluționarea alternativă a litigiilor ANPC"
+              width={250}
+              height={66}
+              className="h-auto w-full"
+            />
+          </a>
+          <a
+            href="https://ec.europa.eu/consumers/odr"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="ANPC SOL"
+          >
+            <Image
+              src="/legal/anpc-sol.webp"
+              alt="Soluționarea online a litigiilor"
+              width={250}
+              height={66}
+              className="h-auto w-full"
+            />
+          </a>
+        </div>
+      </div>
+
+      <div className="container relative z-30 mx-auto hidden px-6 pb-0 pt-10 lg:block lg:px-12 lg:pt-20">
+        <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[1.4fr_0.6fr] lg:items-start lg:gap-12">
           <nav aria-label="Footer navigation" className="space-y-0 text-center lg:text-left">
             {primaryLinks.map((link) => (
               <Link
@@ -111,8 +191,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mx-auto mt-14 grid max-w-5xl gap-10 lg:grid-cols-[1fr_auto] lg:items-start">
-          <div className="grid gap-10 text-left md:grid-cols-3 lg:max-w-3xl">
+        <div className="mx-auto mt-10 grid max-w-5xl gap-8 lg:mt-14 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-10">
+          <div className="grid gap-7 text-left md:grid-cols-3 lg:max-w-3xl lg:gap-10">
             <div>
               <h3 className="font-serif text-xl font-bold text-brown">
                 Loren Ipsum
@@ -197,8 +277,8 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="relative z-20 mt-16 bg-muted">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-6 py-5 text-sm text-forest/80 lg:flex-row lg:px-12">
+      <div className="relative z-30 mt-10 bg-muted lg:mt-16">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-6 py-4 text-xs text-forest/80 lg:flex-row lg:px-12 lg:py-5 lg:text-sm">
           <p>Fructul Bucovinei © {new Date().getFullYear()}</p>
           <div className="flex flex-wrap items-center justify-center gap-6">
             <Link href="#" className="hover:text-burgundy">

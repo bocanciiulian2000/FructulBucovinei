@@ -32,13 +32,13 @@ export function HeroSection() {
         className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6"
       >
         <h1
-          className="font-serif text-7xl md:text-8xl lg:text-9xl text-cream font-bold leading-[0.94] text-balance max-w-6xl"
+          className="font-serif text-5xl font-bold leading-[0.94] text-cream text-balance md:text-8xl lg:text-9xl max-w-6xl"
         >
           Fructul Bucovinei
         </h1>
 
         <p
-          className="max-w-4xl text-2xl text-cream/85 mt-8 leading-relaxed text-balance"
+          className="mt-6 max-w-4xl text-lg leading-relaxed text-cream/85 text-balance md:mt-8 md:text-2xl"
         >
           Mere românești crescute cu grijă în inima Bucovinei,
           culese proaspăt și aduse mai aproape de tine.
@@ -49,13 +49,13 @@ export function HeroSection() {
         >
           <a
             href="#intro"
-            className="group relative px-8 py-4 bg-cream text-forest font-medium text-sm tracking-wide uppercase overflow-hidden rounded-sm transition-all duration-500 hover:bg-burgundy hover:text-cream"
+            className="group relative overflow-hidden rounded-sm bg-cream px-6 py-3 text-xs font-medium uppercase tracking-wide text-forest transition-all duration-500 hover:bg-burgundy hover:text-cream md:px-8 md:py-4 md:text-sm"
           >
             <span className="relative z-10">Descoperă povestea</span>
           </a>
           <a
             href="#adopta"
-            className="group px-8 py-4 border border-cream/60 text-cream font-medium text-sm tracking-wide uppercase rounded-sm transition-all duration-500 hover:bg-cream hover:text-forest"
+            className="group rounded-sm border border-cream/60 px-6 py-3 text-xs font-medium uppercase tracking-wide text-cream transition-all duration-500 hover:bg-cream hover:text-forest md:px-8 md:py-4 md:text-sm"
           >
             Adoptă un pom
           </a>

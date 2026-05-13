@@ -148,7 +148,7 @@ export function Navbar() {
                   <Link
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="font-serif text-3xl text-forest hover:text-burgundy transition-colors duration-300"
+                    className="font-serif text-2xl text-forest transition-colors duration-300 hover:text-burgundy"
                   >
                     {link.label}
                   </Link>

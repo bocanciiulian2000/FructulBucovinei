@@ -11,19 +11,19 @@ export function GallerySection() {
     <section
       id="galerie"
       ref={sectionRef}
-      className="relative z-20 overflow-visible bg-cream py-12 md:py-20 lg:py-32"
+      className="relative overflow-visible bg-cream py-12 md:py-20 lg:py-32"
     >
-      <div className="pointer-events-none absolute inset-x-0 top-28 -bottom-28 z-0 overflow-visible md:-top-12 md:bottom-0 lg:-top-24">
+      <div className="pointer-events-none absolute inset-x-0 top-[clamp(6rem,28vw,7rem)] -bottom-[clamp(5rem,18vw,7rem)] z-10 overflow-visible md:-top-[clamp(3rem,5vw,6rem)] md:bottom-0">
         <Image
           src="/imagini_landing-page/poza_fructulbucovinei_sectiuneagalerie.png"
           alt="Fundal galerie Fructul Bucovinei"
           fill
-          className="scale-[1.18] object-contain object-left-top md:scale-[1.06] lg:scale-[1.12]"
+          className="scale-[1.16] object-contain object-left-top md:scale-[1] lg:scale-[1]"
           sizes="100vw"
         />
       </div>
 
-      <div className="container relative z-10 mx-auto px-6 pt-44 md:pt-36 lg:px-12 lg:pt-52">
+      <div className="container relative z-30 mx-auto px-6 pt-44 md:pt-36 lg:px-12 lg:pt-52">
         <PhotoGallery />
       </div>
     </section>

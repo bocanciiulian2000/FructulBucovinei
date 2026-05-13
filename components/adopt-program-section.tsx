@@ -21,8 +21,8 @@ const programHighlights = [
 
 export function AdoptProgramSection() {
   return (
-    <section className="relative z-10 overflow-visible bg-cream py-16 text-forest lg:py-24">
-      <div className="pointer-events-none absolute right-0 -top-44 z-0 hidden h-[132%] w-[50%] overflow-visible lg:block">
+    <section className="relative overflow-visible bg-cream py-16 text-forest lg:py-24">
+      <div className="pointer-events-none absolute right-0 z-10 hidden h-[clamp(30rem,46vw,45rem)] w-[clamp(26rem,42vw,42rem)] -top-[clamp(8rem,9vw,11rem)] overflow-visible lg:block">
         <Image
           src="/imagini_landing-page/poza_fructulbucovinei_footer.png"
           alt=""
@@ -32,26 +32,26 @@ export function AdoptProgramSection() {
         />
       </div>
 
-      <div className="container relative z-10 mx-auto px-6 lg:px-12">
+      <div className="container relative z-30 mx-auto px-6 lg:px-12">
         <div className="grid gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
           <div>
-            <h2 className="font-serif text-6xl font-bold leading-[0.98] text-forest text-balance md:text-7xl lg:text-8xl">
+            <h2 className="font-serif text-5xl font-bold leading-[0.98] text-forest text-balance md:text-7xl lg:text-8xl">
               Adoptă un pom{' '}
               <span className="text-burgundy">din livada noastră</span>
             </h2>
           </div>
 
           <div className="max-w-3xl lg:ml-auto">
-            <p className="text-xl leading-relaxed text-forest/80">
+            <p className="text-lg leading-relaxed text-forest/80 md:text-xl">
               Programul „Adoptă un pom” este felul nostru de a te aduce mai aproape de livadă.
               Alegi un pom din Fructul Bucovinei, iar noi îl îngrijim cu răbdare, sezon după sezon,
               până când roadele lui ajung proaspete la tine acasă.
             </p>
-            <p className="mt-6 text-xl leading-relaxed text-forest/80">
+            <p className="mt-5 text-lg leading-relaxed text-forest/80 md:mt-6 md:text-xl">
               Este un cadou cu sens pentru familie, prieteni sau parteneri, dar și o promisiune
               frumoasă pentru tine: fructe românești, crescute cu grijă și trimise direct din livadă.
             </p>
-            <p className="mt-6 text-xl leading-relaxed text-forest/80">
+            <p className="mt-5 text-lg leading-relaxed text-forest/80 md:mt-6 md:text-xl">
               Îl poți vizita în livadă, iar la recoltare poți veni împreună cu familia sau prietenii
               să îi culegeți roadele. Dacă preferi, ne ocupăm noi de tot și îți trimitem recolta
               copacului tău direct acasă.
@@ -69,10 +69,10 @@ export function AdoptProgramSection() {
                   <Icon size={22} strokeWidth={1.8} />
                 </div>
                 <div>
-                  <h3 className="font-serif text-3xl font-bold text-brown">
+                  <h3 className="font-serif text-2xl font-bold text-brown md:text-3xl">
                     {item.title}
                   </h3>
-                  <p className="mt-2 text-base leading-relaxed text-forest/75">
+                  <p className="mt-2 text-sm leading-relaxed text-forest/75 md:text-base">
                     {item.text}
                   </p>
                 </div>
@@ -84,7 +84,7 @@ export function AdoptProgramSection() {
         <div className="mt-10">
           <a
             href="#adopta"
-            className="group inline-flex items-center gap-3 rounded-sm bg-burgundy px-8 py-4 text-sm font-semibold uppercase tracking-wide text-cream transition-all duration-500 hover:gap-4 hover:bg-forest"
+            className="group inline-flex items-center gap-3 rounded-sm bg-burgundy px-6 py-3 text-xs font-semibold uppercase tracking-wide text-cream transition-all duration-500 hover:gap-4 hover:bg-forest md:px-8 md:py-4 md:text-sm"
           >
             <span>Vezi pachetele</span>
             <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />

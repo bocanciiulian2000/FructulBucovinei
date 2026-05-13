@@ -22,31 +22,31 @@ export function EventsSection() {
     <section
       id="evenimente"
       ref={sectionRef}
-      className="relative z-10 py-16 lg:py-24 bg-cream overflow-visible"
+      className="relative overflow-visible bg-cream py-16 lg:py-24"
     >
-      <div className="pointer-events-none absolute -left-12 -top-20 z-0 hidden h-[370px] w-[880px] overflow-visible lg:block xl:-left-16 xl:-top-28 xl:h-[460px] xl:w-[1100px]">
+      <div className="pointer-events-none absolute z-10 h-[clamp(12rem,48vw,16rem)] w-[100vw] left-0 -top-[clamp(3rem,12vw,5rem)] overflow-visible lg:h-[clamp(23rem,24vw,29rem)] lg:w-[clamp(52rem,57vw,70rem)] lg:-left-[clamp(3rem,4vw,5rem)] lg:-top-[clamp(5rem,7vw,8rem)]">
         <Image
           src="/imagini_landing-page/poza_fructulbucovinei_sectiuneaexperiente.png"
           alt=""
           fill
           className="object-contain object-left"
-          sizes="1100px"
+          sizes="(max-width: 1024px) 100vw, (max-width: 1440px) 880px, 57vw"
         />
       </div>
 
-      <div className="container relative z-10 mx-auto px-6 lg:px-12">
+      <div className="container relative z-30 mx-auto px-6 lg:px-12">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12 lg:mb-16"
+          className="mb-10 text-center lg:mb-16"
         >
-          <h2 className="font-serif text-6xl md:text-7xl lg:text-8xl text-forest font-bold leading-[0.98] text-balance">
+          <h2 className="font-serif text-5xl font-bold leading-[0.98] text-forest text-balance md:text-7xl lg:text-8xl">
             Experiențe din livada{' '}
             <span className="text-burgundy">Fructul Bucovinei</span>
           </h2>
-          <p className="text-earth mt-5 max-w-2xl mx-auto text-xl leading-relaxed">
+          <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-earth md:mt-5 md:text-xl">
             Descoperă farmecul livezii noastre prin evenimente memorabile. De la degustări și picnicuri, 
             la ateliere și festivaluri, fiecare vizită devine o amintire de neuitat.
           </p>
@@ -85,7 +85,7 @@ export function EventsSection() {
         >
           <a
             href="#"
-            className="group inline-flex items-center gap-3 px-8 py-4 bg-burgundy text-cream font-semibold text-sm tracking-wide uppercase rounded-sm transition-all duration-500 hover:bg-forest hover:gap-4"
+            className="group inline-flex items-center gap-3 rounded-sm bg-burgundy px-6 py-3 text-xs font-semibold uppercase tracking-wide text-cream transition-all duration-500 hover:gap-4 hover:bg-forest md:px-8 md:py-4 md:text-sm"
           >
             <span>Explorează evenimentele</span>
             <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
