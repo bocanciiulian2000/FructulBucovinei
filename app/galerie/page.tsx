@@ -137,7 +137,7 @@ export default function GaleriePage() {
       </section>
 
       <section className="relative overflow-visible px-6 py-16 md:py-24 lg:px-12">
-        <div className="pointer-events-none absolute -right-14 -top-10 z-10 h-[clamp(16rem,68vw,23rem)] w-[clamp(16rem,68vw,23rem)] overflow-visible md:-left-16 md:-right-auto md:-top-24 md:h-[clamp(26rem,32vw,38rem)] md:w-[clamp(26rem,32vw,38rem)]">
+        <div className="pointer-events-none absolute -right-[clamp(10rem,42vw,14rem)] -top-20 z-10 h-[clamp(21rem,88vw,30rem)] w-[clamp(21rem,88vw,30rem)] rotate-[10deg] overflow-visible md:left-auto md:-right-[clamp(18rem,24vw,29rem)] md:-top-44 md:h-[clamp(36rem,49vw,58rem)] md:w-[clamp(36rem,49vw,58rem)] 2xl:right-[-26rem] 2xl:-top-56 2xl:h-[52rem] 2xl:w-[52rem]">
           <Image
             src="/imagini_galerie/props_decor/fructulbucovinei_soaredecor.png"
             alt=""
@@ -157,22 +157,23 @@ export default function GaleriePage() {
           />
         </div>
 
-        <div className="pointer-events-none absolute -left-[clamp(4rem,16vw,7rem)] top-[68%] z-10 hidden h-[clamp(20rem,78vw,32rem)] w-[clamp(20rem,78vw,32rem)] rotate-[-20deg] overflow-visible md:block md:-left-[clamp(8rem,10vw,13rem)] md:h-[clamp(34rem,42vw,52rem)] md:w-[clamp(34rem,42vw,52rem)]">
-          <Image
-            src="/imagini_galerie/props_decor/fructulbucovinei_galerie2.png"
-            alt=""
-            fill
-            className="object-contain object-left"
-            sizes="(max-width: 768px) 78vw, 42vw"
-          />
-        </div>
-
         <div className="container relative z-30 mx-auto">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
-            <h2 className="font-serif text-5xl font-bold leading-[0.98] text-forest text-balance md:text-7xl lg:text-8xl">
-              Din livadă,{' '}
-              <span className="text-burgundy">în fiecare anotimp</span>
-            </h2>
+            <div className="relative overflow-visible">
+              <div className="pointer-events-none absolute -left-10 -top-28 z-0 h-[clamp(14rem,58vw,22rem)] w-[clamp(18rem,74vw,30rem)] md:-left-16 md:-top-44 md:h-[clamp(20rem,28vw,34rem)] md:w-[clamp(28rem,42vw,46rem)]">
+                <Image
+                  src="/imagini_galerie/props_decor/fructulbucovinei_patacrem.png"
+                  alt=""
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 74vw, 42vw"
+                />
+              </div>
+              <h2 className="relative z-10 font-serif text-5xl font-bold leading-[0.98] text-forest text-balance md:text-7xl lg:text-8xl">
+                Din livadă,{' '}
+                <span className="text-burgundy">în fiecare anotimp</span>
+              </h2>
+            </div>
             <p className="max-w-3xl text-lg leading-relaxed text-forest/80 md:text-xl lg:ml-auto">
               Am păstrat aici cadre care spun povestea livezii: dimineți liniștite, flori de primăvară,
               mere culese cu grijă și întâlniri cu oamenii care vin să se bucure de natură.

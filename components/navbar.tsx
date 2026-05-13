@@ -105,6 +105,12 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
+                    onClick={(event) => {
+                      if (link.href === '/') {
+                        event.preventDefault()
+                        window.location.href = '/'
+                      }
+                    }}
                     className={`relative text-sm font-medium transition-colors duration-300 group ${
                       isActive
                         ? isScrolled
@@ -192,7 +198,14 @@ export function Navbar() {
                   >
                     <Link
                       href={link.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={(event) => {
+                        setIsMobileMenuOpen(false)
+
+                        if (link.href === '/') {
+                          event.preventDefault()
+                          window.location.href = '/'
+                        }
+                      }}
                       className={`relative font-serif text-4xl transition-colors duration-300 hover:text-burgundy ${
                         isActive ? 'text-burgundy' : 'text-forest'
                       }`}

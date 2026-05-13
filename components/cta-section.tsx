@@ -23,7 +23,7 @@ export function CtaSection() {
           className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center"
         >
           <div className="pointer-events-none relative z-10 hidden min-h-[500px] overflow-visible lg:block xl:min-h-[540px]" aria-hidden="true">
-            <div className="absolute h-[clamp(39rem,37vw,47rem)] w-[clamp(43rem,41vw,52rem)] -left-[clamp(11rem,15vw,17rem)] -top-[clamp(5rem,7vw,8rem)] overflow-visible 2xl:-left-[clamp(12rem,14vw,18rem)] 2xl:-top-[clamp(4rem,6vw,7rem)]">
+            <div className="absolute h-[clamp(39rem,37vw,47rem)] w-[clamp(43rem,41vw,52rem)] -left-[clamp(8rem,11vw,13rem)] -top-[clamp(5rem,7vw,8rem)] overflow-visible 2xl:-left-[clamp(8rem,10vw,12rem)] 2xl:-top-[clamp(4rem,6vw,7rem)]">
               <Image
                 src="/imagini_landing-page/poza_fructulbucovinei_sectiuneacta.png"
                 alt=""

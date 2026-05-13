@@ -61,7 +61,7 @@ export function Footer() {
         />
       </div>
 
-      <div className="pointer-events-none absolute z-10 h-[clamp(12rem,54vw,16rem)] w-[clamp(12rem,54vw,16rem)] -right-[clamp(3rem,12vw,4.5rem)] -top-[clamp(2rem,7vw,3rem)] -rotate-[30deg] overflow-visible lg:h-[clamp(28rem,29vw,35rem)] lg:w-[clamp(28rem,29vw,35rem)] lg:right-[clamp(6rem,7vw,8rem)] lg:-top-[clamp(5rem,7vw,7rem)]">
+      <div className="pointer-events-none absolute z-10 h-[clamp(12rem,54vw,16rem)] w-[clamp(12rem,54vw,16rem)] -right-[clamp(2.5rem,11vw,4rem)] -top-[clamp(2rem,7vw,3rem)] -rotate-[30deg] overflow-visible lg:h-[clamp(28rem,29vw,35rem)] lg:w-[clamp(28rem,29vw,35rem)] lg:right-[clamp(1.5rem,3.5vw,4rem)] lg:-top-[clamp(5rem,7vw,7rem)] 2xl:right-[clamp(-0.25rem,0.6vw,1rem)]">
         <Image
           src="/imagini_landing-page/poza_fructulbucovinei_footer2.png"
           alt=""
@@ -81,7 +81,7 @@ export function Footer() {
             className="h-auto w-55"
           />
 
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex translate-y-10 items-center gap-3">
             {socialLinks.map((social) => (
               <a
                 key={social.label}
