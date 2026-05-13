@@ -137,9 +137,9 @@ export default function GaleriePage() {
       </section>
 
       <section className="relative overflow-visible px-6 py-16 md:py-24 lg:px-12">
-        <div className="pointer-events-none absolute -left-16 -top-20 z-10 h-[clamp(16rem,68vw,23rem)] w-[clamp(16rem,68vw,23rem)] overflow-visible md:-left-16 md:-top-24 md:h-[clamp(26rem,32vw,38rem)] md:w-[clamp(26rem,32vw,38rem)]">
+        <div className="pointer-events-none absolute -right-14 -top-10 z-10 h-[clamp(16rem,68vw,23rem)] w-[clamp(16rem,68vw,23rem)] overflow-visible md:-left-16 md:-right-auto md:-top-24 md:h-[clamp(26rem,32vw,38rem)] md:w-[clamp(26rem,32vw,38rem)]">
           <Image
-            src="/imagini_Galerie/props_decor/fructulbucovinei_soaredecor.png"
+            src="/imagini_galerie/props_decor/fructulbucovinei_soaredecor.png"
             alt=""
             fill
             className="object-contain"
@@ -157,7 +157,7 @@ export default function GaleriePage() {
           />
         </div>
 
-        <div className="pointer-events-none absolute -left-[clamp(4rem,16vw,7rem)] top-[68%] z-10 h-[clamp(20rem,78vw,32rem)] w-[clamp(20rem,78vw,32rem)] rotate-[-20deg] overflow-visible md:-left-[clamp(8rem,10vw,13rem)] md:h-[clamp(34rem,42vw,52rem)] md:w-[clamp(34rem,42vw,52rem)]">
+        <div className="pointer-events-none absolute -left-[clamp(4rem,16vw,7rem)] top-[68%] z-10 hidden h-[clamp(20rem,78vw,32rem)] w-[clamp(20rem,78vw,32rem)] rotate-[-20deg] overflow-visible md:block md:-left-[clamp(8rem,10vw,13rem)] md:h-[clamp(34rem,42vw,52rem)] md:w-[clamp(34rem,42vw,52rem)]">
           <Image
             src="/imagini_galerie/props_decor/fructulbucovinei_galerie2.png"
             alt=""
@@ -185,7 +185,7 @@ export default function GaleriePage() {
                 key={image.src}
                 type="button"
                 onClick={() => setActiveImageIndex(index)}
-                className={`relative mb-3 block w-full break-inside-avoid overflow-hidden rounded-xl bg-[#fbf7ee] shadow-sm ring-1 ring-forest/10 cursor-zoom-in md:mb-4 lg:mb-5 ${image.aspectClass}`}
+                className={`relative mb-3 block w-full break-inside-avoid overflow-hidden rounded-3xl bg-[#fbf7ee] shadow-sm ring-1 ring-forest/10 cursor-zoom-in md:mb-4 lg:mb-5 md:rounded-[2rem] ${image.aspectClass}`}
                 aria-label="Mărește fotografia"
               >
                 <Image

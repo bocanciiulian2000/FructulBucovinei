@@ -11,8 +11,8 @@ const navLinks = [
   { href: '/', label: 'Acasă' },
   { href: '/#adopta', label: 'Adoptă un pom' },
   { href: '/#evenimente', label: 'Evenimente' },
+  { href: '/#intro', label: 'Despre noi' },
   { href: '/galerie', label: 'Galerie' },
-  { href: '/#cta', label: 'Comandă' },
 ]
 
 export function Navbar() {
@@ -71,7 +71,7 @@ export function Navbar() {
       >
         <nav
           className={`px-6 lg:px-8 rounded-full transition-all duration-500 ${
-            isScrolled
+            isScrolled || isMobileMenuOpen
               ? 'bg-cream/85 backdrop-blur-xl shadow-lg border border-forest/8'
               : 'bg-transparent border border-transparent'
           }`}
@@ -128,7 +128,7 @@ export function Navbar() {
             <div className="flex items-center gap-1">
               <button
                 className={`flex p-2.5 rounded-full transition-all duration-300 ${
-                  isScrolled 
+                  isScrolled || isMobileMenuOpen
                     ? 'text-forest/60 hover:text-burgundy hover:bg-forest/5' 
                     : 'text-cream/70 hover:text-cream hover:bg-cream/10'
                 }`}
@@ -138,7 +138,7 @@ export function Navbar() {
               </button>
               <button
                 className={`flex p-2.5 rounded-full transition-all duration-300 ${
-                  isScrolled 
+                  isScrolled || isMobileMenuOpen
                     ? 'text-forest/60 hover:text-burgundy hover:bg-forest/5' 
                     : 'text-cream/70 hover:text-cream hover:bg-cream/10'
                 }`}
@@ -151,7 +151,7 @@ export function Navbar() {
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className={`lg:hidden p-2 transition-colors duration-300 ${
-                  isScrolled ? 'text-forest' : 'text-cream'
+                  isScrolled || isMobileMenuOpen ? 'text-forest' : 'text-cream'
                 }`}
                 aria-label="Toggle menu"
               >
@@ -178,7 +178,7 @@ export function Navbar() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.4, delay: 0.1 }}
-              className="relative flex flex-col items-center justify-center h-full gap-8"
+              className="relative flex h-full flex-col items-center justify-center gap-8 px-6 pt-20"
             >
               {navLinks.map((link, index) => {
                 const isActive = activeSection === link.href
