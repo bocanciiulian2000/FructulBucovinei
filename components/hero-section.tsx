@@ -11,7 +11,7 @@ export function HeroSection() {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.1])
 
   return (
-    <section className="relative h-screen min-h-[700px] overflow-hidden">
+    <section className="relative h-[95vh] min-h-[630px] overflow-hidden">
       {/* Background Image with Parallax */}
       <motion.div className="absolute inset-0" style={{ y, scale }}>
         <Image

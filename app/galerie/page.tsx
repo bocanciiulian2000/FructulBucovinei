@@ -8,64 +8,59 @@ import { Navbar } from '@/components/navbar'
 
 const galleryImages = [
   {
-    src: '/images/gallery-6.jpg',
-    alt: 'Livada Fructul Bucovinei văzută de sus',
-    aspectClass: 'aspect-[4/5]',
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza1.jpg',
+    alt: 'Fotografie din livada Fructul Bucovinei',
+    aspectClass: 'aspect-[3/2]',
   },
   {
-    src: '/images/gallery-3.jpg',
-    alt: 'Coș cu mere proaspete',
-    aspectClass: 'aspect-[4/3]',
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza2.jpg',
+    alt: 'Fotografie din livada Fructul Bucovinei',
+    aspectClass: 'aspect-[2/3]',
   },
   {
-    src: '/images/gallery-4.jpg',
-    alt: 'Flori de măr în livadă',
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza3.jpg',
+    alt: 'Fotografie din livada Fructul Bucovinei',
+    aspectClass: 'aspect-[2/3]',
+  },
+  {
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza4.JPG',
+    alt: 'Fotografie din livada Fructul Bucovinei',
+    aspectClass: 'aspect-[2/3]',
+  },
+  {
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza5.jpg',
+    alt: 'Fotografie din livada Fructul Bucovinei',
     aspectClass: 'aspect-[3/4]',
   },
   {
-    src: '/images/event-picnic.jpg',
-    alt: 'Oameni la picnic în livadă',
-    aspectClass: 'aspect-[5/4]',
-  },
-  {
-    src: '/images/gallery-1.jpg',
-    alt: 'Livada Fructul Bucovinei la răsărit',
-    aspectClass: 'aspect-[4/3]',
-  },
-  {
-    src: '/images/gallery-2.jpg',
-    alt: 'Mere culese manual',
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza6.jpg',
+    alt: 'Fotografie din livada Fructul Bucovinei',
     aspectClass: 'aspect-[3/4]',
   },
   {
-    src: '/images/event-tasting.jpg',
-    alt: 'Degustare de fructe în livadă',
-    aspectClass: 'aspect-[5/3]',
-  },
-  {
-    src: '/images/story-orchard.jpg',
-    alt: 'Povestea livezii Fructul Bucovinei',
-    aspectClass: 'aspect-[4/3]',
-  },
-  {
-    src: '/images/event-festival.jpg',
-    alt: 'Festival în livadă',
-    aspectClass: 'aspect-[4/5]',
-  },
-  {
-    src: '/images/event-workshop.jpg',
-    alt: 'Atelier creativ în livadă',
-    aspectClass: 'aspect-[4/3]',
-  },
-  {
-    src: '/images/gallery-5.jpg',
-    alt: 'Familie în livada Fructul Bucovinei',
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza7.jpg',
+    alt: 'Fotografie din livada Fructul Bucovinei',
     aspectClass: 'aspect-[3/4]',
   },
   {
-    src: '/images/blog-1.jpg',
-    alt: 'Detaliu din livada Fructul Bucovinei',
-    aspectClass: 'aspect-[5/4]',
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza8.JPG',
+    alt: 'Fotografie din livada Fructul Bucovinei',
+    aspectClass: 'aspect-[3/2]',
+  },
+  {
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza9.jpg',
+    alt: 'Fotografie din livada Fructul Bucovinei',
+    aspectClass: 'aspect-[3/4]',
+  },
+  {
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza10.jpg',
+    alt: 'Fotografie din livada Fructul Bucovinei',
+    aspectClass: 'aspect-[2/3]',
+  },
+  {
+    src: '/imagini_galerie/galerie_fructulbucovinei/poza11.jpg',
+    alt: 'Fotografie din livada Fructul Bucovinei',
+    aspectClass: 'aspect-[2/3]',
   },
 ]
 
