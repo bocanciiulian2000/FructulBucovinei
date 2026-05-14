@@ -124,11 +124,11 @@ export default function GaleriePage() {
       <section className="relative h-[52vh] min-h-[380px] overflow-hidden md:min-h-[440px]">
         <div className="absolute inset-0">
           <Image
-            src="/images/hero-orchard.jpg"
+            src="/imagini_galerie/galerie_fructulbucovinei/fructulbucovinei_hero.jpg"
             alt="Livada Fructul Bucovinei"
             fill
             priority
-            className="object-cover"
+            className="object-cover object-[center_60%]"
             sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/20 to-forest/60" />
