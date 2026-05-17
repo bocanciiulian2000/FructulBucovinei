@@ -23,7 +23,7 @@ const specialActivities = [
     title: 'Vânătoare de ouă',
     description:
       'O activitate de Paște pentru copii, cu surprize ascunse printre pomi și multă bucurie în aer liber.',
-    image: '/images/event-festival.jpg',
+    image: '/imagini_evenimente/vanatoareadeoua.jpeg',
     alt: 'Vânătoare de ouă în livadă',
   },
   {
@@ -37,14 +37,14 @@ const specialActivities = [
     title: 'Campanii verzi și educative',
     description:
       'Activități prin care copiii și adulții descoperă natura, pomii fructiferi și grija pentru mediu.',
-    image: '/images/story-orchard.jpg',
+    image: '/imagini_evenimente/campaniiverzi.jpg',
     alt: 'Activitate educativă în livadă',
   },
   {
     title: 'Ateliere de suc',
     description:
       'O experiență practică și gustoasă, în care merele se transformă în suc proaspăt, pas cu pas.',
-    image: '/images/gallery-3.jpg',
+    image: '/imagini_evenimente/atelierdesuc.jpg',
     alt: 'Atelier de suc de mere',
   },
 ]
@@ -225,7 +225,7 @@ export default function EvenimentePage() {
                 src="/imagini_evenimente/props/propparericlienti.png"
                 alt="Păreri de la clienții Fructul Bucovinei"
                 fill
-                loading="eager"
+                priority
                 className="object-contain object-left"
                 sizes="(max-width: 1024px) 115vw, 64vw"
               />

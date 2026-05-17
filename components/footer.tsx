@@ -285,7 +285,17 @@ export function Footer() {
 
       <div className="relative z-30 mt-10 bg-muted lg:mt-16">
         <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-6 py-4 text-xs text-forest/80 lg:flex-row lg:px-12 lg:py-5 lg:text-sm">
-          <p>Fructul Bucovinei © {new Date().getFullYear()}</p>
+          <p>
+            Fructul Bucovinei © {new Date().getFullYear()} - Design de{' '}
+            <a
+              href="https://bocanciiulian.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-burgundy"
+            >
+              Bocanci Iulian
+            </a>
+          </p>
           <div className="flex flex-wrap items-center justify-center gap-6">
             <Link href="#" className="hover:text-burgundy">
               GDPR

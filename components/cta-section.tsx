@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Mail, MapPin, Phone } from 'lucide-react'
@@ -62,6 +63,13 @@ export function CtaSection() {
                 <span className="break-all">contact@fructulbucovinei.ro</span>
               </a>
             </div>
+
+            <Link
+              href="/contact"
+              className="mt-8 inline-flex rounded-sm bg-burgundy px-6 py-3 text-xs font-semibold uppercase tracking-wide text-cream transition-colors hover:bg-forest md:px-8 md:py-4 md:text-sm"
+            >
+              Contactează-ne
+            </Link>
           </div>
         </motion.div>
       </div>
