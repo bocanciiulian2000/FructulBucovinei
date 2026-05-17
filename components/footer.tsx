@@ -30,9 +30,11 @@ const productLinks = [
 ]
 
 const corporateLinks = [
-  'Lorem ipsum',
-  'Dolor sit amet',
-  'Consectetur elit',
+  { label: 'Acasă', href: '/' },
+  { label: 'Adoptă un pom', href: '/#adopta' },
+  { label: 'Evenimente', href: '/evenimente' },
+  { label: 'Despre noi', href: '/#intro' },
+  { label: 'Galerie', href: '/galerie' },
 ]
 
 const socialLinks = [
@@ -206,11 +208,15 @@ export function Footer() {
 
             <div>
               <h3 className="font-serif text-xl font-bold text-brown">
-                Loren Ipsum
+                Navigare
               </h3>
               <ul className="mt-3 space-y-2 text-base text-forest/80">
-                {corporateLinks.map((label) => (
-                  <li key={label}>{label}</li>
+                {corporateLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="hover:text-burgundy">
+                      {link.label}
+                    </Link>
+                  </li>
                 ))}
               </ul>
             </div>
