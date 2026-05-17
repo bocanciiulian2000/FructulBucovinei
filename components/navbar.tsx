@@ -10,7 +10,7 @@ import { Menu, X, User, ShoppingCart } from 'lucide-react'
 const navLinks = [
   { href: '/', label: 'Acasă' },
   { href: '/#adopta', label: 'Adoptă un pom' },
-  { href: '/#evenimente', label: 'Evenimente' },
+  { href: '/evenimente', label: 'Evenimente' },
   { href: '/#intro', label: 'Despre noi' },
   { href: '/galerie', label: 'Galerie' },
 ]

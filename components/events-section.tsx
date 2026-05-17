@@ -84,7 +84,7 @@ export function EventsSection() {
           className="text-center mt-10 lg:mt-14"
         >
           <a
-            href="#"
+            href="/evenimente"
             className="group inline-flex items-center gap-3 rounded-sm bg-burgundy px-6 py-3 text-xs font-semibold uppercase tracking-wide text-cream transition-all duration-500 hover:gap-4 hover:bg-forest md:px-8 md:py-4 md:text-sm"
           >
             <span>Explorează evenimentele</span>
