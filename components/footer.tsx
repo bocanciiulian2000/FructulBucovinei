@@ -13,13 +13,13 @@ import {
 
 const primaryLinks = [
   { label: 'Produse', href: '#adopta' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Contact', href: '/contact' },
   { label: 'Comandă', href: '#cta' },
 ]
 
 const mobilePrimaryLinks = [
   { label: 'Produse', href: '#adopta' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Contact', href: '/contact' },
   { label: 'Blog', href: '#' },
 ]
 

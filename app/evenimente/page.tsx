@@ -113,7 +113,7 @@ export default function EvenimentePage() {
                 sizes="(max-width: 1024px) 120vw, 68vw"
               />
             </div>
-            <div className="absolute -left-10 top-1/2 h-[112%] w-[132%] -translate-y-1/2 md:-left-28 md:h-[126%] md:w-[126%] lg:-left-72 lg:h-[132%] lg:w-[145%]">
+            <div className="absolute -left-16 top-1/2 h-[122%] w-[142%] -translate-y-1/2 md:-left-28 md:h-[126%] md:w-[126%] lg:-left-72 lg:h-[132%] lg:w-[145%]">
               <Image
                 src="/imagini_evenimente/props/propcosmere.png"
                 alt="Coș cu mere Fructul Bucovinei"
