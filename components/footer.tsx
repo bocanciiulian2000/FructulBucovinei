@@ -12,13 +12,13 @@ import {
 } from 'lucide-react'
 
 const primaryLinks = [
-  { label: 'Produse', href: '#adopta' },
+  { label: 'Produse', href: '/adopta-un-pom' },
   { label: 'Contact', href: '/contact' },
   { label: 'Comandă', href: '#cta' },
 ]
 
 const mobilePrimaryLinks = [
-  { label: 'Produse', href: '#adopta' },
+  { label: 'Produse', href: '/adopta-un-pom' },
   { label: 'Contact', href: '/contact' },
   { label: 'Blog', href: '#' },
 ]
@@ -31,9 +31,9 @@ const productLinks = [
 
 const corporateLinks = [
   { label: 'Acasă', href: '/' },
-  { label: 'Adoptă un pom', href: '/#adopta' },
+  { label: 'Adoptă un pom', href: '/adopta-un-pom' },
   { label: 'Evenimente', href: '/evenimente' },
-  { label: 'Despre noi', href: '/#intro' },
+  { label: 'Despre noi', href: '/despre-noi' },
   { label: 'Galerie', href: '/galerie' },
 ]
 

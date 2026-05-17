@@ -66,13 +66,13 @@ export function IntroSection() {
             className="mt-8 flex flex-wrap gap-4"
           >
             <a
-              href="#adopta"
+              href="/adopta-un-pom"
               className="inline-block rounded-sm bg-burgundy px-6 py-3 text-xs font-semibold uppercase tracking-wide text-cream transition-all duration-500 hover:bg-forest md:px-8 md:py-4 md:text-sm"
             >
               Adoptă un pom
             </a>
             <a
-              href="#adopta"
+              href="/adopta-un-pom"
               className="inline-block rounded-sm border-2 border-forest px-6 py-3 text-xs font-semibold uppercase tracking-wide text-forest transition-all duration-500 hover:bg-forest hover:text-cream md:px-8 md:py-4 md:text-sm"
             >
               Vezi pachetele noastre
