@@ -155,13 +155,13 @@ export default function GaleriePage() {
         <div className="container relative z-30 mx-auto">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
             <div className="relative overflow-visible">
-              <div className="pointer-events-none absolute -left-10 -top-28 z-0 h-[clamp(14rem,58vw,22rem)] w-[clamp(18rem,74vw,30rem)] md:-left-16 md:-top-44 md:h-[clamp(20rem,28vw,34rem)] md:w-[clamp(28rem,42vw,46rem)]">
+              <div className="pointer-events-none absolute -bottom-8 -left-16 -right-8 -top-10 z-0 w-screen md:bottom-auto md:right-auto md:-left-16 md:-top-44 md:h-[clamp(20rem,28vw,34rem)] md:w-[clamp(28rem,42vw,46rem)]">
                 <Image
                   src="/imagini_galerie/props_decor/fructulbucovinei_patacrem.png"
                   alt=""
                   fill
                   className="object-contain"
-                  sizes="(max-width: 768px) 74vw, 42vw"
+                  sizes="(max-width: 768px) 100vw, 42vw"
                 />
               </div>
               <h2 className="relative z-10 font-serif text-5xl font-bold leading-[0.98] text-forest text-balance md:text-7xl lg:text-8xl">

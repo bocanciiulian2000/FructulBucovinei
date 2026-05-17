@@ -47,7 +47,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ro" className={`${cormorantGaramond.variable} ${manrope.variable} bg-cream`}>
+    <html
+      lang="ro"
+      data-scroll-behavior="smooth"
+      className={`${cormorantGaramond.variable} ${manrope.variable} bg-cream`}
+    >
       <body className="font-sans antialiased overflow-x-hidden">
         <SmoothScrollProvider>
           {children}
