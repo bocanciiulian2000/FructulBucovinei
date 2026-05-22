@@ -2,29 +2,10 @@
 
 import { useRef, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { AnimatePresence, motion, useInView } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
-
-const packages = [
-  {
-    id: 1,
-    name: 'Loren Ipsum',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.',
-    image: '/images/tree-apple.jpg',
-  },
-  {
-    id: 2,
-    name: 'Loren Ipsum',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.',
-    image: '/images/tree-pear.jpg',
-  },
-  {
-    id: 3,
-    name: 'Loren Ipsum',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.',
-    image: '/images/tree-plum.jpg',
-  },
-]
+import { adoptPackages, type AdoptPackage } from '@/lib/adopt-packages'
 
 const carouselVariants = {
   enter: (direction: number) => ({
@@ -50,14 +31,14 @@ export function AdoptSection() {
   const goToPreviousPackage = () => {
     setCarouselDirection(-1)
     setActivePackageIndex((currentIndex) =>
-      currentIndex === 0 ? packages.length - 1 : currentIndex - 1
+      currentIndex === 0 ? adoptPackages.length - 1 : currentIndex - 1
     )
   }
 
   const goToNextPackage = () => {
     setCarouselDirection(1)
     setActivePackageIndex((currentIndex) =>
-      currentIndex === packages.length - 1 ? 0 : currentIndex + 1
+      currentIndex === adoptPackages.length - 1 ? 0 : currentIndex + 1
     )
   }
 
@@ -84,12 +65,12 @@ export function AdoptSection() {
           transition={{ duration: 0.6 }}
           className="mb-10 text-center lg:mb-16"
         >
-          <h2 className="mx-auto max-w-4xl font-serif text-5xl font-bold leading-[0.98] text-forest text-balance md:text-7xl lg:text-8xl">
-            Alege unul din{' '}
-            <span className="text-burgundy">pachetele noastre</span>
+          <h2 className="mx-auto max-w-7xl font-serif text-4xl font-bold leading-[0.98] text-forest text-balance md:text-5xl lg:text-[3.45rem] xl:text-[3.9rem] 2xl:text-[4.25rem]">
+            <span className="block lg:whitespace-nowrap">Vino în povestea noastră și scrie o parte din a ta.</span>
+            <span className="block text-burgundy">Adoptă un pom în Bucovina.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-earth md:mt-5 md:text-xl">
-            Alege unul din pachetele Fructul Bucovinei și bucură-te de fructele livezii noastre, crescute cu grijă.
+            Adu natura la tine pe masă. Natura și povestea noastră.
           </p>
         </motion.div>
 
@@ -98,7 +79,7 @@ export function AdoptSection() {
           <div className="overflow-hidden">
             <AnimatePresence mode="wait" custom={carouselDirection}>
               <motion.div
-                key={packages[activePackageIndex].id}
+                key={adoptPackages[activePackageIndex].id}
                 custom={carouselDirection}
                 variants={carouselVariants}
                 initial="enter"
@@ -106,7 +87,7 @@ export function AdoptSection() {
                 exit="exit"
                 transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
               >
-                <PackageCard pkg={packages[activePackageIndex]} />
+                <PackageCard pkg={adoptPackages[activePackageIndex]} />
               </motion.div>
             </AnimatePresence>
           </div>
@@ -122,7 +103,7 @@ export function AdoptSection() {
             </button>
 
             <div className="flex items-center gap-2">
-              {packages.map((pkg, index) => (
+              {adoptPackages.map((pkg, index) => (
                 <button
                   key={pkg.id}
                   type="button"
@@ -150,7 +131,7 @@ export function AdoptSection() {
 
         {/* Desktop Package Cards */}
         <div className="hidden gap-6 md:grid md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-          {packages.map((pkg) => (
+          {adoptPackages.map((pkg) => (
             <PackageCard key={pkg.id} pkg={pkg} />
           ))}
         </div>
@@ -159,11 +140,9 @@ export function AdoptSection() {
   )
 }
 
-type Package = (typeof packages)[number]
-
-function PackageCard({ pkg }: { pkg: Package }) {
+function PackageCard({ pkg }: { pkg: AdoptPackage }) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-[#fbf7ee] shadow-sm transition-all duration-500 hover:shadow-xl">
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-[#fbf7ee] shadow-sm transition-all duration-500 hover:shadow-xl">
       <div className="relative aspect-[4/3] overflow-hidden">
         <Image
           src={pkg.image}
@@ -175,29 +154,33 @@ function PackageCard({ pkg }: { pkg: Package }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       </div>
 
-      <div className="p-6 lg:p-8">
+      <div className="flex flex-1 flex-col p-6 lg:p-8">
         <h3 className="mb-3 font-serif text-xl font-semibold text-forest md:text-2xl lg:text-3xl">
           {pkg.name}
         </h3>
 
-        <p className="mb-6 text-sm leading-relaxed text-earth/70">
+        <p className="text-sm leading-relaxed text-earth/70">
           {pkg.description}
         </p>
 
-        <div className="flex items-end justify-between border-t border-forest/5 pt-4">
+        <p className="mt-4 text-sm font-semibold leading-relaxed text-forest md:text-base">
+          {pkg.contents}
+        </p>
+
+        <div className="mt-auto flex items-end justify-between border-t border-forest/5 pt-4">
           <div className="flex items-baseline gap-1">
             <span className="font-serif text-2xl font-semibold text-burgundy md:text-3xl">
-              xxx
-            </span>
-            <span className="text-sm font-medium text-earth/60">
-              RON/an
+              {pkg.price}
             </span>
           </div>
 
-          <button className="group/btn flex items-center gap-2 rounded-full bg-forest px-4 py-2 text-xs font-semibold text-cream transition-all duration-300 hover:gap-3 hover:bg-burgundy md:px-5 md:py-2.5 md:text-sm">
-            <span>Adoptă</span>
+          <Link
+            href={`/adopta-un-pom/${pkg.slug}`}
+            className="group/btn flex items-center gap-2 rounded-full bg-forest px-4 py-2 text-xs font-semibold text-cream transition-all duration-300 hover:gap-3 hover:bg-burgundy md:px-5 md:py-2.5 md:text-sm"
+          >
+            <span>Vezi pachetul</span>
             <ArrowRight size={14} className="transition-transform duration-300 group-hover/btn:translate-x-0.5" />
-          </button>
+          </Link>
         </div>
       </div>
     </div>

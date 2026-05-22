@@ -14,7 +14,7 @@ export function IntroSection() {
       ref={sectionRef}
       className="relative flex min-h-[680px] items-center overflow-visible bg-cream py-24 lg:min-h-[720px] lg:py-0"
     >
-      <div className="pointer-events-none absolute inset-x-0 -top-16 -bottom-20 z-10 sm:top-0 sm:-bottom-[clamp(9rem,11vw,14rem)] lg:-bottom-[clamp(11rem,13vw,17rem)]">
+      <div className="pointer-events-none absolute inset-x-0 -top-24 -bottom-12 z-10 sm:-top-8 sm:-bottom-[clamp(7rem,9vw,12rem)] lg:-top-12 lg:-bottom-[clamp(9rem,11vw,15rem)]">
         <Image
           src="/imagini_landing-page/poza_fructulbucovinei_prima-sectiune.png"
           alt="Livada Fructul Bucovinei"
@@ -31,31 +31,31 @@ export function IntroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="mb-6 font-serif text-5xl font-bold leading-[0.98] text-forest text-balance md:mb-7 md:text-7xl lg:text-8xl"
+            className="mb-3 font-serif text-5xl font-bold leading-[0.98] text-forest text-balance md:mb-4 md:text-7xl lg:text-8xl"
           >
             Fructul Bucovinei,{' '}
             <span className="text-burgundy">direct la tine acasă</span>
           </motion.h2>
 
-          {/* Description */}
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.35 }}
+            className="mb-5 max-w-2xl font-serif text-2xl font-bold leading-tight text-forest md:mb-6 md:text-4xl lg:text-[3.25rem]"
+          >
+            Un pom. <span className="text-burgundy">Un an.</span>{' '}
+            <span className="text-brown">O poveste.</span>
+          </motion.p>
+
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="mb-4 max-w-2xl text-lg leading-relaxed text-earth md:mb-5 md:text-xl"
-          >
-            Fiecare fruct din livada noastră este crescut cu grijă, în ritmul naturii și cu respect pentru tradițiile bucovinene.
-            Merele noastre păstrează gustul autentic al livezii și ajung proaspete, direct de la pom la masa ta.
-          </motion.p>
-
-          {/* Additional text about packages */}
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.5 }}
             className="max-w-2xl text-lg leading-relaxed text-earth md:text-xl"
           >
-            Poți comanda pachete cu mere proaspete pentru tine, pentru familie sau pentru oamenii dragi, pregătite simplu și atent.
+            Din primăvara în care înflorește până în toamna în care rodește, vei fi parte din viața unui pom din Bucovina.
+            Îi vei cunoaște povestea, îi vei urmări parcursul și îi vei primi roadele.
+            Pentru că uneori cea mai frumoasă legătură cu natura începe cu un singur pom.
           </motion.p>
 
           {/* CTA Buttons */}

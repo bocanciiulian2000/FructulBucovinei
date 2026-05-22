@@ -15,7 +15,7 @@ export function HeroSection() {
       {/* Background Image with Parallax */}
       <motion.div className="absolute inset-0" style={{ y, scale }}>
         <Image
-          src="/images/hero-orchard.jpg"
+          src="/imagini_landing-page/poza_fructulbucovinei_hero.jpeg"
           alt="Livada Fructul Bucovinei la răsărit"
           fill
           priority
@@ -37,11 +37,14 @@ export function HeroSection() {
           Fructul Bucovinei
         </h1>
 
-        <p
-          className="mt-6 max-w-4xl text-lg leading-relaxed text-cream/85 text-balance md:mt-8 md:text-2xl"
-        >
-          Mere românești crescute cu grijă în inima Bucovinei,
-          culese proaspăt și aduse mai aproape de tine.
+        <p className="mt-6 max-w-4xl font-serif text-3xl font-bold leading-tight text-cream text-balance md:mt-8 md:text-5xl">
+          Oameni și o poveste.
+        </p>
+
+        <p className="mt-4 max-w-4xl text-lg leading-relaxed text-cream/85 text-balance md:mt-6 md:text-2xl">
+          Din rădăcini. Pentru generații.
+          <br />
+          Fructe crescute la granița dintre tradiție și viitor.
         </p>
 
         <div
