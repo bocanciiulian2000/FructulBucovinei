@@ -192,7 +192,7 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
               <h2 className="font-serif text-4xl font-bold leading-none text-forest md:text-5xl">
                 Include
               </h2>
-              <ul className="mt-6 space-y-3 text-base leading-relaxed text-forest/80 md:text-lg">
+              <ul className="mt-6 space-y-2 text-base leading-snug text-forest/80 md:text-lg">
                 {pkg.includes.map((item) => (
                   <li key={item} className="flex gap-2">
                     <span className="mt-3 size-1.5 shrink-0 rounded-full bg-burgundy" />
@@ -206,7 +206,7 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
               <h2 className="font-serif text-4xl font-bold leading-none text-forest md:text-5xl">
                 Ce trebuie să știi
               </h2>
-              <ul className="mt-6 space-y-3 text-base leading-relaxed text-forest/80 md:text-lg">
+              <ul className="mt-6 space-y-2 text-base leading-snug text-forest/80 md:text-lg">
                 {pkg.usefulDetails.map((item) => (
                   <li key={item} className="flex gap-2">
                     <span className="mt-3 size-1.5 shrink-0 rounded-full bg-burgundy" />
