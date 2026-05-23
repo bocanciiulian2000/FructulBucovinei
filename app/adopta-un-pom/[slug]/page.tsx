@@ -76,34 +76,34 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
           </div>
 
           <div className="max-w-3xl rounded-3xl bg-[#fbf7ee] p-6 shadow-sm ring-1 ring-forest/10 md:p-8 lg:p-10">
-            <p className="font-serif text-2xl font-bold leading-none text-forest md:text-3xl">
+            <p className="font-serif text-xl font-bold leading-none text-forest md:text-3xl">
               Adoptă un pom - Pachet fizic
             </p>
-            <h1 className="mt-4 font-serif text-5xl font-bold leading-[0.94] text-brown text-balance md:text-6xl lg:text-7xl">
+            <h1 className="mt-4 font-serif text-4xl font-bold leading-[0.94] text-brown text-balance md:text-6xl lg:text-7xl">
               {pkg.name}
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-forest/80 md:text-xl">
+            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-forest/80 md:text-xl">
               {pkg.description}
             </p>
 
             <div className="mt-8 space-y-5">
               <div>
-                <p className="text-base font-bold text-forest md:text-lg">
+                <p className="text-sm font-bold text-forest md:text-lg">
                   Cantitate {pkg.contents}
                 </p>
-                <p className="mt-2 text-3xl font-bold text-forest md:text-4xl">
+                <p className="mt-2 text-2xl font-bold text-forest md:text-4xl">
                   Preț: <span>{pkg.price}</span>
                 </p>
-                <p className="mt-2 text-sm text-forest/70 md:text-base">
+                <p className="mt-2 text-xs text-forest/70 md:text-base">
                   (TVA inclus, transport inclus).
                 </p>
-                <p className="mt-5 font-serif text-xl italic text-forest/65">
+                <p className="mt-5 font-serif text-lg italic text-forest/65 md:text-xl">
                   În stoc
                 </p>
               </div>
 
               <div>
-                <label htmlFor="apple-type" className="text-base font-bold text-forest">
+                <label htmlFor="apple-type" className="text-sm font-bold text-forest md:text-base">
                   Tipul de mere
                 </label>
                 <select
@@ -119,13 +119,13 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
               </div>
 
               <div className="pt-4">
-                <h2 className="text-base font-bold text-forest md:text-lg">
+                <h2 className="text-sm font-bold text-forest md:text-lg">
                   Completează detaliile pentru certificatul de adopție:
                 </h2>
 
                 <div className="mt-4 space-y-4">
                   <div>
-                    <label htmlFor="certificate-name" className="text-sm font-semibold text-forest">
+                    <label htmlFor="certificate-name" className="text-xs font-semibold text-forest md:text-sm">
                       Numele care să apară pe certificat
                     </label>
                     <input
@@ -137,7 +137,7 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
                   </div>
 
                   <div>
-                      <label htmlFor="tree-name" className="text-sm font-semibold text-forest">
+                      <label htmlFor="tree-name" className="text-xs font-semibold text-forest md:text-sm">
                         Numele pomului adoptat
                       </label>
                       <input
@@ -149,7 +149,7 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
                   </div>
 
                   <div>
-                    <label htmlFor="tree-message" className="text-sm font-semibold text-forest">
+                    <label htmlFor="tree-message" className="text-xs font-semibold text-forest md:text-sm">
                       Mesaj personalizat pentru pom
                     </label>
                     <textarea
@@ -189,10 +189,10 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
         <div className="container mx-auto max-w-6xl border-t border-brown/35 pt-10 md:pt-14">
           <div className="grid gap-10 md:grid-cols-2 md:gap-16 lg:gap-24">
             <div>
-              <h2 className="font-serif text-4xl font-bold leading-none text-forest md:text-5xl">
+              <h2 className="font-serif text-3xl font-bold leading-none text-forest md:text-5xl">
                 Include
               </h2>
-              <ul className="mt-6 space-y-2 text-base leading-snug text-forest/80 md:text-lg">
+              <ul className="mt-5 space-y-2 text-sm leading-snug text-forest/80 md:mt-6 md:text-lg">
                 {pkg.includes.map((item) => (
                   <li key={item} className="flex gap-2">
                     <span className="mt-3 size-1.5 shrink-0 rounded-full bg-burgundy" />
@@ -203,10 +203,10 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
             </div>
 
             <div>
-              <h2 className="font-serif text-4xl font-bold leading-none text-forest md:text-5xl">
+              <h2 className="font-serif text-3xl font-bold leading-none text-forest md:text-5xl">
                 Ce trebuie să știi
               </h2>
-              <ul className="mt-6 space-y-2 text-base leading-snug text-forest/80 md:text-lg">
+              <ul className="mt-5 space-y-2 text-sm leading-snug text-forest/80 md:mt-6 md:text-lg">
                 {pkg.usefulDetails.map((item) => (
                   <li key={item} className="flex gap-2">
                     <span className="mt-3 size-1.5 shrink-0 rounded-full bg-burgundy" />
