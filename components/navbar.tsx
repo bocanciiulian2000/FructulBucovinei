@@ -15,11 +15,16 @@ const navLinks = [
   { href: '/galerie', label: 'Galerie' },
 ]
 
-export function Navbar() {
+type NavbarProps = {
+  solid?: boolean
+}
+
+export function Navbar({ solid = false }: NavbarProps) {
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('/')
+  const isSolid = solid || isScrolled || isMobileMenuOpen
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,7 +76,7 @@ export function Navbar() {
       >
         <nav
           className={`px-6 lg:px-8 rounded-full transition-all duration-500 ${
-            isScrolled || isMobileMenuOpen
+            isSolid
               ? 'bg-cream/85 backdrop-blur-xl shadow-lg border border-forest/8'
               : 'bg-transparent border border-transparent'
           }`}
@@ -113,10 +118,10 @@ export function Navbar() {
                     }}
                     className={`relative text-sm font-medium transition-colors duration-300 group ${
                       isActive
-                        ? isScrolled
+                        ? isSolid
                           ? 'text-burgundy'
                           : 'text-cream'
-                        : isScrolled
+                        : isSolid
                           ? 'text-forest/70 hover:text-forest'
                           : 'text-cream/80 hover:text-cream'
                     }`}
@@ -124,7 +129,7 @@ export function Navbar() {
                     {link.label}
                     <span className={`absolute -bottom-1 left-0 h-px transition-all duration-300 group-hover:w-full ${
                       isActive ? 'w-full' : 'w-0'
-                    } ${isScrolled ? 'bg-burgundy' : 'bg-cream'}`} />
+                    } ${isSolid ? 'bg-burgundy' : 'bg-cream'}`} />
                   </Link>
                 )
               })}
@@ -134,7 +139,7 @@ export function Navbar() {
             <div className="flex items-center gap-1">
               <button
                 className={`flex p-2.5 rounded-full transition-all duration-300 ${
-                  isScrolled || isMobileMenuOpen
+                  isSolid
                     ? 'text-forest/60 hover:text-burgundy hover:bg-forest/5' 
                     : 'text-cream/70 hover:text-cream hover:bg-cream/10'
                 }`}
@@ -144,7 +149,7 @@ export function Navbar() {
               </button>
               <button
                 className={`flex p-2.5 rounded-full transition-all duration-300 ${
-                  isScrolled || isMobileMenuOpen
+                  isSolid
                     ? 'text-forest/60 hover:text-burgundy hover:bg-forest/5' 
                     : 'text-cream/70 hover:text-cream hover:bg-cream/10'
                 }`}
@@ -157,7 +162,7 @@ export function Navbar() {
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className={`lg:hidden p-2 transition-colors duration-300 ${
-                  isScrolled || isMobileMenuOpen ? 'text-forest' : 'text-cream'
+                  isSolid ? 'text-forest' : 'text-cream'
                 }`}
                 aria-label="Toggle menu"
               >

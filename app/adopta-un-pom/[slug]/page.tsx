@@ -27,7 +27,7 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-cream text-forest">
-      <Navbar />
+      <Navbar solid />
 
       <section className="relative overflow-visible bg-cream px-4 pb-12 pt-32 md:px-6 md:pb-20 md:pt-36 lg:px-12">
         <div className="container mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.98fr_1.02fr] lg:items-start lg:gap-12">
