@@ -51,16 +51,16 @@ export function HeroSection() {
           className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mt-12"
         >
           <a
-            href="/despre-noi"
+            href="/adopta-un-pom"
             className="group relative overflow-hidden rounded-sm bg-cream px-6 py-3 text-xs font-medium uppercase tracking-wide text-forest transition-all duration-500 hover:bg-burgundy hover:text-cream md:px-8 md:py-4 md:text-sm"
           >
-            <span className="relative z-10">Descoperă povestea</span>
+            <span className="relative z-10">Adoptă un pom</span>
           </a>
           <a
-            href="/adopta-un-pom"
+            href="/despre-noi"
             className="group rounded-sm border border-cream/60 px-6 py-3 text-xs font-medium uppercase tracking-wide text-cream transition-all duration-500 hover:bg-cream hover:text-forest md:px-8 md:py-4 md:text-sm"
           >
-            Adoptă un pom
+            Despre noi
           </a>
         </div>
 
