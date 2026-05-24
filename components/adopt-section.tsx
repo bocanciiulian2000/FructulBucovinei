@@ -159,15 +159,17 @@ function PackageCard({ pkg }: { pkg: AdoptPackage }) {
           {pkg.name}
         </h3>
 
-        <p className="text-sm leading-relaxed text-earth/70">
-          {pkg.description}
-        </p>
+        <div className="flex flex-1 flex-col">
+          <p className="text-sm leading-relaxed text-earth/70">
+            {pkg.description}
+          </p>
 
-        <p className="mt-4 text-sm font-semibold leading-relaxed text-forest md:text-base">
-          {pkg.contents}
-        </p>
+          <p className="mt-auto text-sm font-semibold leading-relaxed text-forest md:text-base">
+            {pkg.contents}
+          </p>
+        </div>
 
-        <div className="mt-auto flex items-end justify-between border-t border-forest/5 pt-4">
+        <div className="mt-1 flex items-end justify-between border-t border-forest/5 pt-4">
           <div className="flex items-baseline gap-1">
             <span className="font-serif text-2xl font-semibold text-burgundy md:text-3xl">
               {pkg.price}
