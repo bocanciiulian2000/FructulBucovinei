@@ -32,7 +32,7 @@ export function HeroSection() {
         className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6"
       >
         <h1
-          className="font-serif text-5xl font-bold leading-[0.94] text-cream text-balance md:text-8xl lg:text-9xl max-w-6xl"
+          className="max-w-6xl font-serif text-5xl font-bold leading-[0.94] text-cream text-balance md:text-8xl lg:text-9xl"
         >
           Fructul Bucovinei
         </h1>
