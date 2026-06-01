@@ -96,15 +96,6 @@ export default function DespreNoiPage() {
             </h2>
 
             <div className="relative z-20">
-              <div className="pointer-events-none absolute -bottom-14 -left-16 -right-44 -top-10 z-0 hidden md:block md:-bottom-20 md:-left-24 md:-right-225 md:-top-16">
-                <Image
-                  src="/imagini_despre/propcrem.png"
-                  alt=""
-                  fill
-                  className="object-contain object-right opacity-90 md:scale-110"
-                  sizes="(max-width: 768px) 120vw, (max-width: 1024px) 80vw, 54vw"
-                />
-              </div>
               <div className="relative z-10">
                 <h2 className="hidden whitespace-nowrap font-serif font-bold leading-[0.98] text-forest md:block md:text-5xl lg:text-[3.75rem] xl:text-[4.5rem]">
                   Despre{' '}
@@ -120,6 +111,15 @@ export default function DespreNoiPage() {
             </div>
 
             <div className="relative -mr-64 min-h-[340px] overflow-visible md:-mr-16 md:min-h-[480px] lg:-mr-36 lg:min-h-[680px] xl:-mr-52">
+              <div className="pointer-events-none absolute -bottom-12 -left-20 -right-10 -top-12 z-0 hidden md:block lg:-bottom-16 lg:-left-24 lg:-right-20 lg:-top-16">
+                <Image
+                  src="/imagini_despre/propcrem.png"
+                  alt=""
+                  fill
+                  className="scale-110 object-contain object-right opacity-90"
+                  sizes="(max-width: 1024px) 100vw, 52vw"
+                />
+              </div>
               <Image
                 src="/imagini_despre/fructulbucovinei_cosmere1.png"
                 alt="Coș cu mere Fructul Bucovinei"
