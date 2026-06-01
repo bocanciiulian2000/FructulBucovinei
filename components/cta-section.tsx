@@ -44,7 +44,7 @@ export function CtaSection() {
               />
             </div>
 
-            <div className="absolute z-10 h-[clamp(39rem,37vw,47rem)] w-[clamp(43rem,41vw,52rem)] -left-[clamp(8rem,11vw,13rem)] -top-[clamp(5rem,7vw,8rem)] overflow-visible 2xl:-left-[clamp(8rem,10vw,12rem)] 2xl:-top-[clamp(4rem,6vw,7rem)]">
+            <div className="absolute z-10 h-[clamp(39rem,37vw,47rem)] w-[clamp(43rem,41vw,52rem)] -left-[clamp(2.5rem,5.5vw,6.5rem)] -top-[clamp(5rem,7vw,8rem)] overflow-visible 2xl:-left-[clamp(2.5rem,4.5vw,5.5rem)] 2xl:-top-[clamp(4rem,6vw,7rem)]">
               <Image
                 src="/imagini_landing-page/poza_fructulbucovinei_sectiuneacta.png"
                 alt=""
