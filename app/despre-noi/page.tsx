@@ -96,7 +96,7 @@ export default function DespreNoiPage() {
             </h2>
 
             <div className="relative z-20">
-              <div className="pointer-events-none absolute -bottom-14 -left-16 -right-44 -top-10 z-0 hidden md:block md:-bottom-20 md:-left-24 md:-right-32 md:-top-16">
+              <div className="pointer-events-none absolute -bottom-14 -left-16 -right-44 -top-10 z-0 hidden md:block md:-bottom-20 md:-left-24 md:-right-225 md:-top-16">
                 <Image
                   src="/imagini_despre/propcrem.png"
                   alt=""
