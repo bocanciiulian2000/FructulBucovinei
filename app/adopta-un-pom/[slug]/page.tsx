@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react'
+import { AddToCartButton } from '@/components/add-to-cart-button'
 import { Footer } from '@/components/footer'
 import { Navbar } from '@/components/navbar'
 import { adoptPackages } from '@/lib/adopt-packages'
@@ -173,12 +174,10 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
                   </button>
                 </div>
 
-                <button
-                  type="button"
+                <AddToCartButton
+                  pkg={pkg}
                   className="h-14 rounded-xl bg-burgundy px-6 text-sm font-bold text-cream transition-colors hover:bg-forest md:text-base"
-                >
-                  Adaugă în coș
-                </button>
+                />
               </div>
             </div>
           </div>

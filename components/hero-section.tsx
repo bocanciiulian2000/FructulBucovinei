@@ -24,6 +24,7 @@ export function HeroSection() {
         />
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/20 to-forest/60" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,56,45,0.42)_0%,rgba(34,56,45,0.22)_38%,rgba(34,56,45,0.08)_68%,transparent_100%)]" />
       </motion.div>
 
       {/* Content */}

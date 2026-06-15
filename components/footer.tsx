@@ -12,13 +12,13 @@ import {
 } from 'lucide-react'
 
 const primaryLinks = [
-  { label: 'Produse', href: '/adopta-un-pom' },
+  { label: 'Produse', href: '/produse' },
   { label: 'Contact', href: '/contact' },
   { label: 'Comandă', href: '#cta' },
 ]
 
 const mobilePrimaryLinks = [
-  { label: 'Produse', href: '/adopta-un-pom' },
+  { label: 'Produse', href: '/produse' },
   { label: 'Contact', href: '/contact' },
   { label: 'Blog', href: '#' },
 ]

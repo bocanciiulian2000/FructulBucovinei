@@ -140,7 +140,7 @@ export function AdoptSection() {
   )
 }
 
-function PackageCard({ pkg }: { pkg: AdoptPackage }) {
+export function PackageCard({ pkg }: { pkg: AdoptPackage }) {
   return (
     <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-[#fbf7ee] shadow-sm transition-all duration-500 hover:shadow-xl">
       <div className="relative aspect-[4/3] overflow-hidden">

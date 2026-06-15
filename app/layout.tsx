@@ -4,16 +4,16 @@ import { SmoothScrollProvider } from '@/components/smooth-scroll-provider'
 import './globals.css'
 
 const cormorantGaramond = Cormorant_Garamond({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-serif',
+  variable: '--font-cormorant-garamond',
   display: 'swap',
 })
 
 const manrope = Manrope({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-sans',
+  variable: '--font-manrope',
   display: 'swap',
 })
 

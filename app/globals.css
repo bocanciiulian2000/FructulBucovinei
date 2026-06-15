@@ -34,8 +34,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Manrope', sans-serif;
-  --font-serif: 'Cormorant Garamond', serif;
+  --font-sans: var(--font-manrope);
+  --font-serif: var(--font-cormorant-garamond);
   --font-mono: 'Geist Mono', monospace;
   
   --color-background: var(--background);
