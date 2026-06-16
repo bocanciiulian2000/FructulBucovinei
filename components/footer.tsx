@@ -297,13 +297,13 @@ export function Footer() {
             </a>
           </p>
           <div className="flex flex-wrap items-center justify-center gap-6">
-            <Link href="#" className="hover:text-burgundy">
-              GDPR
+            <Link href="/politica-de-confidentialitate" className="hover:text-burgundy">
+              Politica de confidențialitate
             </Link>
-            <Link href="#" className="hover:text-burgundy">
+            <Link href="/termeni-si-conditii" className="hover:text-burgundy">
               Termeni și condiții
             </Link>
-            <Link href="#" className="hover:text-burgundy">
+            <Link href="/politica-de-retur" className="hover:text-burgundy">
               Politică de retur
             </Link>
           </div>

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Menu, X, User, ShoppingCart } from 'lucide-react'
+import { AuthPanel } from '@/components/auth-panel'
 import {
   CART_UPDATED_EVENT,
   formatCartPrice,
@@ -38,6 +39,7 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isCartPreviewOpen, setIsCartPreviewOpen] = useState(false)
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isPromoOpen, setIsPromoOpen] = useState(false)
   const [promoCode, setPromoCode] = useState('')
@@ -195,6 +197,12 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
             {/* User & Cart Icons */}
             <div className="flex items-center gap-1">
               <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false)
+                  setIsCartPreviewOpen(false)
+                  setIsAuthModalOpen(true)
+                }}
                 className={`flex p-2.5 rounded-full transition-all duration-300 ${
                   isSolid
                     ? 'text-forest/60 hover:text-burgundy hover:bg-forest/5' 
@@ -293,6 +301,46 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                 )
               })}
             </motion.nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isAuthModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-forest/35 backdrop-blur-[2px]"
+              aria-label="Închide fereastra de autentificare"
+              onClick={() => setIsAuthModalOpen(false)}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+              className="relative max-h-[calc(100vh-2rem)] w-full max-w-[39rem] overflow-y-auto rounded-3xl border border-forest/10 bg-[#fbf7ee] p-5 shadow-2xl sm:p-7"
+            >
+              <div className="mb-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsAuthModalOpen(false)}
+                  className="flex size-10 items-center justify-center rounded-full border border-forest/15 text-forest transition-colors hover:border-burgundy hover:text-burgundy"
+                  aria-label="Închide autentificarea"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <AuthPanel defaultMode="login" compact />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
