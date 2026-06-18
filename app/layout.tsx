@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Cormorant_Garamond, Manrope } from 'next/font/google'
+import { AuthSessionProvider } from '@/components/auth-session-provider'
 import { SmoothScrollProvider } from '@/components/smooth-scroll-provider'
+import { SiteLock } from '@/components/site-lock'
 import './globals.css'
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -54,7 +56,9 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased overflow-x-hidden">
         <SmoothScrollProvider>
-          {children}
+          <AuthSessionProvider>
+            <SiteLock>{children}</SiteLock>
+          </AuthSessionProvider>
         </SmoothScrollProvider>
       </body>
     </html>

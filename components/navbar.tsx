@@ -1,25 +1,27 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Menu, X, User, ShoppingCart } from 'lucide-react'
+import { ArrowRight, Menu, Minus, Plus, X, User, ShoppingCart } from 'lucide-react'
 import { AuthPanel } from '@/components/auth-panel'
+import { useAuthSession } from '@/components/auth-session-provider'
 import {
   CART_UPDATED_EVENT,
   formatCartPrice,
   getCartSubtotal,
   getCartQuantity,
+  removeCartItem,
   readCart,
+  setCartItemQuantity,
   type CartItem,
 } from '@/lib/cart'
 
 const navLinks = [
   { href: '/', label: 'Acasă' },
   { href: '/adopta-un-pom', label: 'Adoptă un pom' },
-  { href: '/produse', label: 'Produse' },
   { href: '/evenimente', label: 'Evenimente' },
   { href: '/despre-noi', label: 'Despre noi' },
   { href: '/galerie', label: 'Galerie' },
@@ -40,12 +42,15 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isCartPreviewOpen, setIsCartPreviewOpen] = useState(false)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isPromoOpen, setIsPromoOpen] = useState(false)
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromoCode, setAppliedPromoCode] = useState('')
   const [promoError, setPromoError] = useState('')
   const [activeSection, setActiveSection] = useState('/')
+  const accountMenuRef = useRef<HTMLDivElement>(null)
+  const { user, logout, loading } = useAuthSession()
   const isSolid = true
   const cartQuantity = getCartQuantity(cartItems)
   const subtotal = getCartSubtotal(cartItems)
@@ -70,6 +75,14 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
     setAppliedPromoCode(normalizedCode)
     setPromoCode(normalizedCode)
     setPromoError('')
+  }
+
+  const updateCartPreviewQuantity = (slug: string, quantity: number) => {
+    setCartItems(setCartItemQuantity(slug, quantity))
+  }
+
+  const removeCartPreviewItem = (slug: string) => {
+    setCartItems(removeCartItem(slug))
   }
 
   useEffect(() => {
@@ -123,6 +136,21 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
     }
   }, [])
 
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        accountMenuRef.current &&
+        !accountMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsUserMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [])
+
   return (
     <>
       <motion.header
@@ -146,13 +174,13 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
               >
-                <span className="relative block h-20 w-20 translate-y-1 lg:h-28 lg:w-28 lg:translate-y-1.5">
+                <span className="relative block h-12 w-12 lg:h-14 lg:w-14">
                   <Image
                     src="/logo&favicon/logofructulbucovinei.png"
                     alt="Logo Fructul Bucovinei"
                     fill
                     className="object-contain"
-                    sizes="112px"
+                    sizes="56px"
                   />
                 </span>
               </motion.span>
@@ -174,7 +202,7 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                       }
                     }}
                     className={`relative text-sm transition-colors duration-300 group ${
-                      link.href === '/produse' ? 'font-bold' : 'font-medium'
+                      link.href === '/adopta-un-pom' ? 'font-bold' : 'font-medium'
                     } ${
                       isActive
                         ? isSolid
@@ -196,22 +224,89 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
 
             {/* User & Cart Icons */}
             <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMobileMenuOpen(false)
-                  setIsCartPreviewOpen(false)
-                  setIsAuthModalOpen(true)
-                }}
-                className={`flex p-2.5 rounded-full transition-all duration-300 ${
-                  isSolid
-                    ? 'text-forest/60 hover:text-burgundy hover:bg-forest/5' 
-                    : 'text-cream/70 hover:text-cream hover:bg-cream/10'
-                }`}
-                aria-label="Contul meu"
+              <div
+                ref={accountMenuRef}
+                className="relative"
+                onMouseEnter={() => user && setIsUserMenuOpen(true)}
+                onMouseLeave={() => user && setIsUserMenuOpen(false)}
               >
-                <User size={18} strokeWidth={1.5} />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    setIsCartPreviewOpen(false)
+
+                    if (user) {
+                      setIsAuthModalOpen(false)
+                      setIsUserMenuOpen((current) => !current)
+                      return
+                    }
+
+                    setIsUserMenuOpen(false)
+                    setIsAuthModalOpen(true)
+                  }}
+                  className={`flex rounded-full p-2.5 transition-all duration-300 ${
+                    isSolid
+                      ? 'text-forest/60 hover:bg-forest/5 hover:text-burgundy'
+                      : 'text-cream/70 hover:bg-cream/10 hover:text-cream'
+                  }`}
+                  aria-label="Contul meu"
+                >
+                  <User size={18} strokeWidth={1.5} />
+                </button>
+
+                <AnimatePresence>
+                  {user && isUserMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 top-full z-[90] mt-3 w-64 overflow-hidden rounded-2xl border border-forest/10 bg-cream p-2 shadow-2xl"
+                    >
+                      <div className="px-4 py-3">
+                        <p className="text-xs font-bold uppercase tracking-wide text-brown">
+                          Cont conectat
+                        </p>
+                        <p className="mt-1 truncate text-sm font-semibold text-forest">
+                          {loading ? 'Se verifică...' : `${user.firstName} ${user.lastName}`}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <Link
+                          href="/contul-meu"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-forest transition-colors hover:bg-burgundy/5 hover:text-burgundy"
+                        >
+                          Contul meu
+                          <ArrowRight size={14} />
+                        </Link>
+                        <Link
+                          href="/comenzile-mele"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-forest transition-colors hover:bg-burgundy/5 hover:text-burgundy"
+                        >
+                          Comenzile mele
+                          <ArrowRight size={14} />
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            await logout()
+                            setIsUserMenuOpen(false)
+                            setIsAuthModalOpen(false)
+                          }}
+                          className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-burgundy transition-colors hover:bg-burgundy/10"
+                        >
+                          Delogare
+                          <X size={14} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -287,7 +382,7 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                         }
                       }}
                       className={`relative font-serif text-4xl transition-colors duration-300 hover:text-burgundy ${
-                        link.href === '/produse' ? 'font-bold' : 'font-normal'
+                        link.href === '/adopta-un-pom' ? 'font-bold' : 'font-normal'
                       } ${
                         isActive ? 'text-burgundy' : 'text-forest'
                       }`}
@@ -396,7 +491,7 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                       Coșul este gol
                     </p>
                     <p className="mt-2 max-w-xs text-sm leading-relaxed text-forest/65">
-                      Adaugă un produs din pagina de produse și îl vei vedea aici.
+                      Adaugă un pachet din pagina Adoptă un pom și îl vei vedea aici.
                     </p>
                   </div>
                 ) : (
@@ -420,9 +515,37 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                           <h3 className="font-serif text-2xl font-bold leading-none text-forest">
                             {item.name}
                           </h3>
-                          <p className="mt-2 text-sm text-forest/65">
-                            Cantitate: {item.quantity}
-                          </p>
+                          <div className="mt-3 flex items-center gap-3">
+                            <div className="grid h-9 w-24 grid-cols-3 overflow-hidden rounded-full border border-forest/15 bg-cream text-forest">
+                              <button
+                                type="button"
+                                onClick={() => updateCartPreviewQuantity(item.slug, item.quantity - 1)}
+                                disabled={item.quantity <= 1}
+                                className="flex items-center justify-center transition-colors hover:bg-burgundy hover:text-cream disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-forest"
+                                aria-label="Scade cantitatea"
+                              >
+                                <Minus size={12} />
+                              </button>
+                              <span className="flex items-center justify-center text-xs font-bold">
+                                {item.quantity}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => updateCartPreviewQuantity(item.slug, item.quantity + 1)}
+                                className="flex items-center justify-center transition-colors hover:bg-burgundy hover:text-cream"
+                                aria-label="Crește cantitatea"
+                              >
+                                <Plus size={12} />
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeCartPreviewItem(item.slug)}
+                              className="text-xs font-bold uppercase tracking-wide text-burgundy transition-colors hover:text-forest"
+                            >
+                              Șterge
+                            </button>
+                          </div>
                           <p className="mt-2 font-semibold text-burgundy">
                             {item.price}
                           </p>

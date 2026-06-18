@@ -164,12 +164,9 @@ export function PackageCard({ pkg }: { pkg: AdoptPackage }) {
             {pkg.description}
           </p>
 
-          <p className="mt-auto text-sm font-semibold leading-relaxed text-forest md:text-base">
-            {pkg.contents}
-          </p>
         </div>
 
-        <div className="mt-1 flex items-end justify-between border-t border-forest/5 pt-4">
+        <div className="mt-6 flex items-end justify-between border-t border-forest/5 pt-4">
           <div className="flex items-baseline gap-1">
             <span className="font-serif text-2xl font-semibold text-burgundy md:text-3xl">
               {pkg.price}

@@ -12,21 +12,15 @@ import {
 } from 'lucide-react'
 
 const primaryLinks = [
-  { label: 'Produse', href: '/produse' },
+  { label: 'Adoptă un pom', href: '/adopta-un-pom' },
   { label: 'Contact', href: '/contact' },
   { label: 'Comandă', href: '#cta' },
 ]
 
 const mobilePrimaryLinks = [
-  { label: 'Produse', href: '/produse' },
+  { label: 'Adoptă un pom', href: '/adopta-un-pom' },
   { label: 'Contact', href: '/contact' },
   { label: 'Blog', href: '#' },
-]
-
-const productLinks = [
-  'Lorem ipsum',
-  'Dolor sit amet',
-  'Consectetur elit',
 ]
 
 const corporateLinks = [
@@ -194,18 +188,7 @@ export function Footer() {
         </div>
 
         <div className="mx-auto mt-10 grid max-w-5xl gap-8 lg:mt-14 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-10">
-          <div className="grid gap-7 text-left md:grid-cols-3 lg:max-w-3xl lg:gap-10">
-            <div>
-              <h3 className="font-serif text-xl font-bold text-brown">
-                Loren Ipsum
-              </h3>
-              <ul className="mt-3 space-y-2 text-base text-forest/80">
-                {productLinks.map((label) => (
-                  <li key={label}>{label}</li>
-                ))}
-              </ul>
-            </div>
-
+          <div className="grid gap-7 text-left md:grid-cols-2 lg:max-w-3xl lg:gap-10">
             <div>
               <h3 className="font-serif text-xl font-bold text-brown">
                 Navigare
@@ -226,24 +209,24 @@ export function Footer() {
               <ul className="mt-3 space-y-3 text-base text-forest/80">
                 <li className="flex items-start gap-3">
                   <MapPin size={20} className="mt-0.5 shrink-0 text-brown" />
-                  <span>Suceava, Bucovina, România</span>
+                  <span>Sat Rădășeni, Str. Părului 1, județul Suceava, cod 727460</span>
                 </li>
                 <li>
                   <a
-                    href="tel:+40700000000"
+                    href="tel:+40764417635"
                     className="flex items-center gap-3 hover:text-burgundy"
                   >
                     <Phone size={18} className="shrink-0 text-brown" />
-                    +40 700 000 000
+                    +40 764 417 635
                   </a>
                 </li>
                 <li>
                   <a
-                    href="mailto:contact@fructulbucovinei.ro"
+                    href="mailto:fructulbucovinei@gmail.com"
                     className="flex items-center gap-3 hover:text-burgundy"
                   >
                     <Mail size={18} className="shrink-0 text-brown" />
-                    contact@fructulbucovinei.ro
+                    fructulbucovinei@gmail.com
                   </a>
                 </li>
               </ul>

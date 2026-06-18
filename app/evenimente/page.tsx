@@ -5,15 +5,15 @@ import { Navbar } from '@/components/navbar'
 
 const familyActivityImages = [
   {
-    src: '/images/event-picnic.jpg',
+    src: '/imagini_evenimente/actfamilii1.jpeg',
     alt: 'Familie la picnic în livadă',
   },
   {
-    src: '/images/gallery-5.jpg',
+    src: '/imagini_evenimente/actfamilii2.jpeg',
     alt: 'Familie în livada Fructul Bucovinei',
   },
   {
-    src: '/images/event-workshop.jpg',
+    src: '/imagini_evenimente/actfamilii3.jpg',
     alt: 'Atelier pentru copii în livadă',
   },
 ]
@@ -153,9 +153,11 @@ export default function EvenimentePage() {
               <span className="text-burgundy">familii</span>
             </h2>
             <p className="mt-4 max-w-4xl text-sm leading-relaxed text-forest/80 md:mt-8 md:text-xl">
-              Experiențele din livadă sunt gândite pentru familii, copii și grupuri de prieteni
-              care vor să petreacă timp frumos în natură. De la culesul merelor până la plimbări
-              printre pomi, fiecare vizită devine o amintire caldă și ușor de dus mai departe.
+              Livada noastră este mai mult decât locul în care cresc fructele. Este un spațiu în care oamenii se
+              întâlnesc, copiii descoperă, iar natura devine parte din experiențe care rămân în suflet. De la
+              vânători de ouă și ateliere de preparat suc pentru cei mici, până la vizite școlare, picnicuri și alte
+              activități de sezon, fiecare eveniment este gândit pentru a aduce oamenii mai aproape de
+              natură și de povestea din spatele fiecărui fruct.
             </p>
           </div>
 

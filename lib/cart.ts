@@ -26,18 +26,23 @@ export function readCart(): CartItem[] {
 }
 
 export function writeCart(cart: CartItem[]) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
   window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart))
   window.dispatchEvent(new CustomEvent(CART_UPDATED_EVENT, { detail: cart }))
 }
 
-export function addPackageToCart(pkg: AdoptPackage) {
+export function addPackageToCart(pkg: AdoptPackage, quantity = 1) {
   const cart = readCart()
   const existingItem = cart.find((item) => item.slug === pkg.slug)
+  const normalizedQuantity = Math.max(1, Math.floor(quantity) || 1)
 
   const nextCart = existingItem
     ? cart.map((item) =>
         item.slug === pkg.slug
-          ? { ...item, quantity: item.quantity + 1 }
+          ? { ...item, quantity: item.quantity + normalizedQuantity }
           : item
       )
     : [
@@ -48,9 +53,29 @@ export function addPackageToCart(pkg: AdoptPackage) {
           name: pkg.name,
           price: pkg.price,
           image: pkg.image,
-          quantity: 1,
+          quantity: normalizedQuantity,
         },
       ]
+
+  writeCart(nextCart)
+  return nextCart
+}
+
+export function setCartItemQuantity(slug: string, quantity: number) {
+  const cart = readCart()
+  const normalizedQuantity = Math.max(1, Math.floor(quantity) || 1)
+  const nextCart = cart.map((item) =>
+    item.slug === slug
+      ? { ...item, quantity: normalizedQuantity }
+      : item
+  )
+
+  writeCart(nextCart)
+  return nextCart
+}
+
+export function removeCartItem(slug: string) {
+  const nextCart = readCart().filter((item) => item.slug !== slug)
 
   writeCart(nextCart)
   return nextCart

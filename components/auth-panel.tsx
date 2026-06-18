@@ -3,22 +3,29 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, Eye, EyeOff, Lock, Mail, UserRound } from 'lucide-react'
+import { apiUrl } from '@/lib/api-url'
+import {
+  LOCAL_DEMO_EMAIL,
+  loginLocalDemoUser,
+} from '@/lib/local-demo-auth'
+import { useAuthSession, type AuthUser } from '@/components/auth-session-provider'
 
 type AuthMode = 'login' | 'register'
-
-type AuthUser = {
-  id: number
-  firstName: string
-  lastName: string
-  email: string
-}
 
 type AuthPanelProps = {
   defaultMode?: AuthMode
   compact?: boolean
+  redirectOnSuccess?: boolean
+  onSuccess?: () => void
 }
 
-export function AuthPanel({ defaultMode = 'login', compact = false }: AuthPanelProps) {
+export function AuthPanel({
+  defaultMode = 'login',
+  compact = false,
+  redirectOnSuccess = true,
+  onSuccess,
+}: AuthPanelProps) {
+  const { setUser, refreshSession } = useAuthSession()
   const [mode, setMode] = useState<AuthMode>(defaultMode)
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -33,27 +40,51 @@ export function AuthPanel({ defaultMode = 'login', compact = false }: AuthPanelP
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState('')
+  const [feedbackTone, setFeedbackTone] = useState<'success' | 'error' | null>(null)
   const [error, setError] = useState('')
-  const [authUser, setAuthUser] = useState<AuthUser | null>(null)
 
   const handleAuthSuccess = (user: AuthUser, successMessage: string) => {
-    setAuthUser(user)
+    setUser(user)
     setFeedback(successMessage)
+    setFeedbackTone('success')
     setError('')
+    onSuccess?.()
+  }
+
+  const redirectHome = () => {
+    window.setTimeout(() => {
+      window.location.assign('/')
+    }, 1000)
   }
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setIsSubmitting(true)
     setFeedback('')
+    setFeedbackTone(null)
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const localDemoUser = loginLocalDemoUser(loginEmail, loginPassword)
+
+      if (localDemoUser) {
+        handleAuthSuccess(localDemoUser, 'Te-ai autentificat cu succes pe contul demo local.')
+        if (redirectOnSuccess) {
+          redirectHome()
+        }
+        return
+      }
+
+      if (loginEmail.trim().toLowerCase() === LOCAL_DEMO_EMAIL) {
+        throw new Error('Datele de autentificare pentru contul demo sunt incorecte.')
+      }
+
+      const response = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           email: loginEmail,
           password: loginPassword,
@@ -70,6 +101,10 @@ export function AuthPanel({ defaultMode = 'login', compact = false }: AuthPanelP
       }
 
       handleAuthSuccess(data.user, 'Te-ai autentificat cu succes.')
+      void refreshSession()
+      if (redirectOnSuccess) {
+        redirectHome()
+      }
     } catch (authError) {
       setError(authError instanceof Error ? authError.message : 'A apărut o eroare.')
     } finally {
@@ -81,14 +116,16 @@ export function AuthPanel({ defaultMode = 'login', compact = false }: AuthPanelP
     event.preventDefault()
     setIsSubmitting(true)
     setFeedback('')
+    setFeedbackTone(null)
     setError('')
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           firstName,
           lastName,
@@ -109,7 +146,14 @@ export function AuthPanel({ defaultMode = 'login', compact = false }: AuthPanelP
         throw new Error(data.error ?? 'Nu s-a putut crea contul.')
       }
 
-      handleAuthSuccess(data.user, 'Contul a fost creat cu succes.')
+      handleAuthSuccess(
+        data.user,
+        'Contul tău a fost înregistrat cu succes!'
+      )
+      void refreshSession()
+      if (redirectOnSuccess) {
+        redirectHome()
+      }
     } catch (authError) {
       setError(authError instanceof Error ? authError.message : 'A apărut o eroare.')
     } finally {
@@ -129,7 +173,11 @@ export function AuthPanel({ defaultMode = 'login', compact = false }: AuthPanelP
               compact ? 'text-3xl sm:text-4xl' : 'text-4xl'
             }`}
           >
-            Autentificare <span className="text-burgundy">sau creare cont</span>
+            {mode === 'login' ? (
+              'Autentificare'
+            ) : (
+              <span className="text-burgundy">Creare cont</span>
+            )}
           </h2>
         </div>
 
@@ -159,22 +207,18 @@ export function AuthPanel({ defaultMode = 'login', compact = false }: AuthPanelP
         </div>
       </div>
 
-      {authUser ? (
-        <div className="mt-6 rounded-2xl border border-burgundy/20 bg-burgundy/5 p-5">
+      {feedback && feedbackTone === 'success' ? (
+        <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-950">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="text-burgundy" size={18} />
-            <p className="font-semibold text-forest">
-              Ești autentificat ca {authUser.firstName} {authUser.lastName}.
+            <CheckCircle2 className="text-emerald-600" size={18} />
+            <p className="font-semibold">
+              {feedback}
             </p>
           </div>
-          <p className="mt-2 text-sm text-forest/65">{authUser.email}</p>
+          <p className="mt-2 text-sm text-emerald-900/70">
+            Poți continua cumpărăturile și navigarea pe site.
+          </p>
         </div>
-      ) : null}
-
-      {feedback && !authUser ? (
-        <p className="mt-5 rounded-2xl border border-burgundy/20 bg-burgundy/5 px-4 py-3 text-sm font-semibold text-burgundy">
-          {feedback}
-        </p>
       ) : null}
 
       {error ? (

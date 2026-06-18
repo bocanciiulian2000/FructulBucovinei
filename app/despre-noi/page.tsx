@@ -37,12 +37,9 @@ const cultivationSections = [
 ]
 
 const teamGalleryImages = [
-  '/images/gallery-1.jpg',
-  '/images/gallery-2.jpg',
-  '/images/gallery-3.jpg',
-  '/images/gallery-4.jpg',
-  '/images/gallery-5.jpg',
-  '/images/gallery-6.jpg',
+  '/imagini_despre/echipa1.jpeg',
+  '/imagini_despre/echipa2.jpeg',
+  '/imagini_despre/echipa3.jpeg',
 ]
 
 export default function DespreNoiPage() {
@@ -180,17 +177,22 @@ export default function DespreNoiPage() {
 
       <section className="relative bg-cream px-4 py-12 md:px-6 md:py-24 lg:px-12">
         <div className="container mx-auto max-w-[94rem]">
-          <div className="grid gap-4 md:grid-cols-[0.85fr_1.15fr] md:items-end md:gap-8">
-            <h2 className="whitespace-nowrap font-serif text-3xl font-bold leading-[0.98] text-forest md:col-span-2 md:text-7xl">
-              Echipa livezii{' '}
-              <span className="text-burgundy">Fructul Bucovinei</span>
+          <div className="grid gap-4 md:grid-cols-[0.85fr_1.15fr] md:items-center md:gap-8">
+            <h2 className="font-serif text-3xl font-bold leading-[0.98] text-forest md:text-7xl">
+              <span className="block">Echipa livezii</span>
+              <span className="block text-burgundy">Fructul Bucovinei</span>
             </h2>
 
-            <p className="max-w-3xl text-[0.85rem] leading-relaxed text-forest/80 md:col-start-2 md:text-xl lg:ml-auto">
-              Fructul Bucovinei este o afacere de familie, crescută cu răbdare,
-              muncă și respect pentru pământ. În spatele fiecărui pom, fiecărei
-              recolte și fiecărui pachet pregătit se află oameni care cunosc
-              livada, îi înțeleg ritmul și duc mai departe povestea ei.
+            <p className="max-w-3xl text-[0.85rem] leading-relaxed text-forest/80 md:text-xl lg:ml-auto">
+              Fructul Bucovinei este o afacere de familie, construită în timp, din muncă făcută împreună și din
+              respect pentru pământul care ne dăruiește tot ce avem mai bun. Suntem membri ai aceleiași
+              familii și lucrăm umăr lângă umăr în livadă, fiecare cu rolul lui, dar cu aceeași grijă pentru pomi
+              și pentru roadele lor. Pentru noi, nu este doar o activitate, ci un mod de viață moștenit și dus
+              mai departe cu răbdare. Credem în lucrurile făcute corect, fără grabă, în ritmul naturii. Fiecare
+              pom este îngrijit ca și cum ar fi al nostru, iar fiecare recoltă poartă amprenta unei munci sincere,
+              de familie. Prin „Adoptă un Pom”, împărtășim mai departe această lume simplă: legătura dintre
+              familie, pământ și povestea care crește odată cu ele. Fructul Bucovinei înseamnă familie,
+              răbdare și grijă pentru fiecare pom în parte.
             </p>
           </div>
 

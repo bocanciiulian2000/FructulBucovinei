@@ -2,7 +2,7 @@
 
 import { Ref, forwardRef, useEffect, useState } from 'react'
 import Image, { ImageProps } from 'next/image'
-import { motion, useMotionValue } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 import { cn } from '@/lib/utils'
 
@@ -18,7 +18,7 @@ const photos = [
     mobileY: '26px',
     zIndex: 70,
     direction: 'right' as Direction,
-    src: '/images/gallery-6.jpg',
+    src: '/optimized/home-gallery/poza1.webp',
     alt: 'Livada Fructul Bucovinei',
   },
   {
@@ -30,8 +30,8 @@ const photos = [
     mobileY: '10px',
     zIndex: 60,
     direction: 'left' as Direction,
-    src: '/images/gallery-1.jpg',
-    alt: 'Dimineață în livada Fructul Bucovinei',
+    src: '/optimized/home-gallery/poza3.webp',
+    alt: 'Copii în livada Fructul Bucovinei',
   },
   {
     id: 3,
@@ -42,8 +42,8 @@ const photos = [
     mobileY: '42px',
     zIndex: 50,
     direction: 'left' as Direction,
-    src: '/images/gallery-2.jpg',
-    alt: 'Mere culese cu grijă',
+    src: '/optimized/home-gallery/actfamilii1.webp',
+    alt: 'Activități pentru familii în livadă',
   },
   {
     id: 4,
@@ -54,8 +54,8 @@ const photos = [
     mobileY: '0px',
     zIndex: 40,
     direction: 'right' as Direction,
-    src: '/images/gallery-3.jpg',
-    alt: 'Coș cu mere proaspete',
+    src: '/optimized/home-gallery/poza5.webp',
+    alt: 'Mere din galeria Fructul Bucovinei',
   },
   {
     id: 5,
@@ -66,8 +66,8 @@ const photos = [
     mobileY: '40px',
     zIndex: 30,
     direction: 'right' as Direction,
-    src: '/images/gallery-4.jpg',
-    alt: 'Flori de măr în livadă',
+    src: '/optimized/home-gallery/echipa2.webp',
+    alt: 'Echipa livezii Fructul Bucovinei',
   },
   {
     id: 6,
@@ -78,8 +78,8 @@ const photos = [
     mobileY: '14px',
     zIndex: 20,
     direction: 'left' as Direction,
-    src: '/images/gallery-5.jpg',
-    alt: 'Momente în livada Fructul Bucovinei',
+    src: '/optimized/home-gallery/atelierdesuc.webp',
+    alt: 'Atelier de suc de mere',
   },
   {
     id: 7,
@@ -90,8 +90,8 @@ const photos = [
     mobileY: '28px',
     zIndex: 10,
     direction: 'right' as Direction,
-    src: '/images/event-picnic.jpg',
-    alt: 'Oameni în livada Fructul Bucovinei',
+    src: '/optimized/home-gallery/poza8.webp',
+    alt: 'Moment din livada Fructul Bucovinei',
   },
 ]
 
@@ -277,29 +277,12 @@ export const Photo = ({
   height: number
 }) => {
   const [rotation, setRotation] = useState<number>(0)
-  const x = useMotionValue(200)
-  const y = useMotionValue(200)
 
   useEffect(() => {
     const randomRotation =
       getRandomNumberInRange(1, 4) * (direction === 'left' ? -1 : 1)
     setRotation(randomRotation)
   }, [direction])
-
-  function handleMouse(event: {
-    currentTarget: { getBoundingClientRect: () => DOMRect }
-    clientX: number
-    clientY: number
-  }) {
-    const rect = event.currentTarget.getBoundingClientRect()
-    x.set(event.clientX - rect.left)
-    y.set(event.clientY - rect.top)
-  }
-
-  const resetMouse = () => {
-    x.set(200)
-    y.set(200)
-  }
 
   return (
     <motion.div
@@ -330,10 +313,8 @@ export const Photo = ({
       }}
       className={cn(
         className,
-        'relative mx-auto shrink-0 cursor-grab active:cursor-grabbing'
+        'relative mx-auto shrink-0 cursor-grab transform-gpu will-change-transform active:cursor-grabbing'
       )}
-      onMouseMove={handleMouse}
-      onMouseLeave={resetMouse}
       draggable={false}
       tabIndex={0}
     >
@@ -343,7 +324,9 @@ export const Photo = ({
           fill
           src={src}
           alt={alt}
-          sizes="(max-width: 768px) 148px, 220px"
+          sizes="(max-width: 768px) 150px, 310px"
+          loading="lazy"
+          decoding="async"
           {...props}
           draggable={false}
         />

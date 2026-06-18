@@ -10,7 +10,7 @@ import {
   Lock,
   Mail,
   MapPin,
-  Truck,
+  X,
 } from 'lucide-react'
 import {
   CART_UPDATED_EVENT,
@@ -19,7 +19,7 @@ import {
   readCart,
   type CartItem,
 } from '@/lib/cart'
-import { CheckoutAuthSection } from '@/components/checkout-auth-section'
+import { AuthPanel } from '@/components/auth-panel'
 
 const promoCodes: Record<string, number> = {
   BUCOVINA10: 10,
@@ -32,11 +32,10 @@ export function CheckoutPageContent() {
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState('')
   const [couponMessage, setCouponMessage] = useState('')
-  const [deliveryMethod, setDeliveryMethod] = useState<'courier' | 'pickup'>(
-    'courier'
-  )
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash')
   const [acceptTerms, setAcceptTerms] = useState(false)
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [shipToDifferentAddress, setShipToDifferentAddress] = useState(false)
 
   useEffect(() => {
     const syncCart = () => setCartItems(readCart())
@@ -76,11 +75,10 @@ export function CheckoutPageContent() {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-start lg:gap-10">
-      <div className="space-y-8">
-        <CheckoutAuthSection />
-
-        <section className="rounded-3xl border border-forest/10 bg-[#fbf7ee] p-5 shadow-sm md:p-7">
+    <>
+      <div className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-start lg:gap-10">
+        <div className="space-y-8">
+          <section className="rounded-3xl border border-forest/10 bg-[#fbf7ee] p-5 shadow-sm md:p-7">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-brown">
@@ -111,12 +109,13 @@ export function CheckoutPageContent() {
 
             <p className="text-sm text-forest/65">
               Ai deja cont?{' '}
-              <a
-                href="#autentificare"
+              <button
+                type="button"
+                onClick={() => setIsAuthModalOpen(true)}
                 className="font-semibold text-burgundy underline-offset-4 hover:underline"
               >
-                Folosește secțiunea de autentificare de mai sus
-              </a>
+                Autentifică-te aici.
+              </button>
             </p>
           </div>
         </section>
@@ -130,66 +129,7 @@ export function CheckoutPageContent() {
           </h2>
 
           <div className="mt-6 space-y-6">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-brown">
-                Tip client
-              </p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <RadioCard
-                  name="client-type"
-                  label="Persoană fizică"
-                  description="Comandă personală"
-                  defaultChecked
-                />
-                <RadioCard
-                  name="client-type"
-                  label="Persoană juridică"
-                  description="Firmă / companie"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Prenume" required placeholder="Prenumele tău" />
-              <Field label="Nume" required placeholder="Numele tău" />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-[1.25fr_1fr]">
-              <SelectField label="Țară / Regiune" required defaultValue="România">
-                <option>România</option>
-                <option>Republica Moldova</option>
-              </SelectField>
-              <Field label="Telefon" required type="tel" placeholder="+40 712 345 678" />
-            </div>
-
-            <Field
-              label="Stradă"
-              required
-              placeholder="Adresă, nume stradă, număr etc."
-            />
-            <Field
-              label="Apartament, complex, unitate etc."
-              placeholder="Opțional"
-            />
-
-            <div className="grid gap-4 sm:grid-cols-[1fr_1fr_0.85fr]">
-              <SelectField label="Județ" required defaultValue="Suceava">
-                <option>București</option>
-                <option>Suceava</option>
-                <option>Iași</option>
-                <option>Cluj</option>
-              </SelectField>
-              <Field label="Municipiu / Localitate" required placeholder="Oraș / comună" />
-              <Field label="Cod poștal" required placeholder="000000" />
-            </div>
-
-            <label className="flex items-center gap-3 text-sm font-semibold text-forest">
-              <input
-                type="checkbox"
-                className="size-4 rounded border-forest/30 text-burgundy focus:ring-burgundy"
-              />
-              Creezi un cont?
-            </label>
+            <CheckoutAddressFields />
           </div>
         </section>
 
@@ -210,6 +150,8 @@ export function CheckoutPageContent() {
             <label className="flex items-center gap-3 text-sm font-semibold text-forest">
               <input
                 type="checkbox"
+                checked={shipToDifferentAddress}
+                onChange={(event) => setShipToDifferentAddress(event.target.checked)}
                 className="size-4 rounded border-forest/30 text-burgundy focus:ring-burgundy"
               />
               Livrezi la o altă adresă?
@@ -218,38 +160,12 @@ export function CheckoutPageContent() {
               Dacă adresa de livrare diferă de cea de facturare, o poți completa
               mai jos.
             </p>
-          </div>
-        </section>
 
-        <section className="rounded-3xl border border-forest/10 bg-[#fbf7ee] p-5 shadow-sm md:p-7">
-          <div className="flex items-center gap-3">
-            <Truck size={18} className="text-burgundy" />
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-brown">
-                Metodă de livrare
-              </p>
-              <h2 className="mt-1 font-serif text-3xl font-bold leading-none text-forest">
-                Alege cum primești coletul
-              </h2>
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            <RadioCard
-              name="delivery-method"
-              label="Livrare gratuită"
-              description="Livrare estimată în 3 zile"
-              defaultChecked
-              active={deliveryMethod === 'courier'}
-              onChange={() => setDeliveryMethod('courier')}
-            />
-            <RadioCard
-              name="delivery-method"
-              label="Ridicare din livadă"
-              description="Dacă vrei să treci personal pe la noi"
-              active={deliveryMethod === 'pickup'}
-              onChange={() => setDeliveryMethod('pickup')}
-            />
+            {shipToDifferentAddress && (
+              <div className="rounded-2xl border border-forest/10 bg-cream/70 p-4 md:p-5">
+                <CheckoutAddressFields />
+              </div>
+            )}
           </div>
         </section>
 
@@ -262,75 +178,6 @@ export function CheckoutPageContent() {
             placeholder="Note referitoare la comandă, de exemplu: anunță-mă înainte de livrare."
             className="mt-3 w-full resize-none rounded-3xl border border-forest/20 bg-cream px-4 py-3 text-sm leading-relaxed text-forest outline-none transition-colors placeholder:text-forest/40 focus:border-burgundy"
           />
-        </section>
-
-        <section className="rounded-3xl border border-forest/10 bg-[#fbf7ee] p-5 shadow-sm md:p-7">
-          <p className="text-xs font-bold uppercase tracking-wide text-brown">
-            Metodă de plată
-          </p>
-          <h2 className="mt-2 flex items-center gap-3 font-serif text-4xl font-bold leading-none text-forest">
-            <CreditCard size={18} className="text-burgundy" />
-            Cum plătești
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-forest/65">
-            Toate tranzacțiile sunt sigure și criptate.
-          </p>
-
-          <div className="mt-5 space-y-3">
-            <RadioCard
-              name="payment-method"
-              label="Numerar la livrare"
-              description="Plătești când ajunge coletul."
-              defaultChecked
-              active={paymentMethod === 'cash'}
-              onChange={() => setPaymentMethod('cash')}
-            />
-            <RadioCard
-              name="payment-method"
-              label="Netopia Payments"
-              description="Plată online cu cardul"
-              active={paymentMethod === 'card'}
-              onChange={() => setPaymentMethod('card')}
-            />
-          </div>
-
-          <p className="mt-5 text-sm leading-relaxed text-forest/70">
-            Datele tale personale vor fi folosite pentru a gestiona accesul la
-            cont, livrare și comenzile tale. Citește politica de confidențialitate.
-          </p>
-
-          <label className="mt-5 flex items-start gap-3 text-sm font-semibold text-forest">
-            <input
-              type="checkbox"
-              checked={acceptTerms}
-              onChange={(event) => setAcceptTerms(event.target.checked)}
-              className="mt-1 size-4 rounded border-forest/30 text-burgundy focus:ring-burgundy"
-            />
-            Am citit și sunt de acord cu termenii și condițiile site-ului web
-            <span className="text-burgundy"> *</span>
-          </label>
-
-          <div className="mt-5 grid grid-cols-[1fr_auto] gap-3">
-            <input
-              placeholder="Număr card cadou"
-              className="h-12 rounded-full border border-forest/20 bg-cream px-5 text-sm text-forest outline-none placeholder:text-forest/40 focus:border-burgundy"
-            />
-            <button
-              type="button"
-              className="h-12 rounded-sm bg-forest/10 px-4 text-xs font-bold uppercase tracking-wide text-forest transition-colors hover:bg-burgundy hover:text-cream"
-            >
-              Aplică cardul cadou
-            </button>
-          </div>
-
-          <button
-            type="button"
-            disabled={!acceptTerms}
-            className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-sm bg-forest px-6 text-xs font-bold uppercase tracking-wide text-cream transition-colors hover:bg-burgundy disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Lock size={15} />
-            Plasează comanda
-          </button>
         </section>
       </div>
 
@@ -419,27 +266,115 @@ export function CheckoutPageContent() {
                   label="Sub-total"
                   value={`${formatCartPrice(subtotal)} lei`}
                 />
-                <SummaryRow label="Livrare estimată" value="3 zile" />
+                <SummaryRow label="Livrare" value="Livrare la domiciliu" />
                 {discountPercent > 0 && (
                   <SummaryRow
                     label={`Reducere ${appliedCoupon}`}
                     value={`-${discountPercent}%`}
                   />
                 )}
-                <p className="border-y border-forest/10 py-4 text-right text-sm italic text-forest">
-                  Taxele și livrarea finală se calculează la checkout.
-                </p>
                 <SummaryRow
                   label="Total"
                   value={`${formatCartPrice(total)} lei`}
                   strong
                 />
               </div>
+
+              <div className="border-t border-forest/10 pt-5">
+                <p className="text-xs font-bold uppercase tracking-wide text-brown">
+                  Metodă de plată
+                </p>
+                <h3 className="mt-2 flex items-center gap-3 font-serif text-3xl font-bold leading-none text-forest">
+                  <CreditCard size={18} className="text-burgundy" />
+                  Cum plătești
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-forest/65">
+                  Toate tranzacțiile sunt sigure și criptate.
+                </p>
+
+                <div className="mt-5 space-y-3">
+                  <RadioCard
+                    name="payment-method"
+                    label="Numerar la livrare"
+                    description="Plătești când ajunge coletul."
+                    defaultChecked
+                    active={paymentMethod === 'cash'}
+                    onChange={() => setPaymentMethod('cash')}
+                  />
+                  <RadioCard
+                    name="payment-method"
+                    label="Netopia Payments"
+                    description="Plată online cu cardul"
+                    active={paymentMethod === 'card'}
+                    onChange={() => setPaymentMethod('card')}
+                  />
+                </div>
+
+                <p className="mt-5 text-sm leading-relaxed text-forest/70">
+                  Datele personale vor fi folosite pentru a procesa comanda, pentru a-ți susține experiența pe acest site web și pentru alte scopuri descrise în{' '}
+                  <Link
+                    href="/politica-de-confidentialitate"
+                    className="font-semibold text-burgundy underline-offset-4 hover:underline"
+                  >
+                    politica de confidențialitate
+                  </Link>
+                  .
+                </p>
+
+                <label className="mt-5 flex items-start gap-3 text-sm font-semibold text-forest">
+                  <input
+                    type="checkbox"
+                    checked={acceptTerms}
+                    onChange={(event) => setAcceptTerms(event.target.checked)}
+                    className="mt-1 size-4 rounded border-forest/30 text-burgundy focus:ring-burgundy"
+                  />
+                  Am citit și sunt de acord cu termenii și condițiile site-ului web
+                  <span className="text-burgundy"> *</span>
+                </label>
+
+                <button
+                  type="button"
+                  disabled={!acceptTerms}
+                  className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-sm bg-forest px-6 text-xs font-bold uppercase tracking-wide text-cream transition-colors hover:bg-burgundy disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Lock size={15} />
+                  Plasează comanda
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </aside>
-    </div>
+      </div>
+      {isAuthModalOpen && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-forest/35 backdrop-blur-[2px]"
+            aria-label="Închide autentificarea"
+            onClick={() => setIsAuthModalOpen(false)}
+          />
+          <div className="relative max-h-[calc(100vh-2rem)] w-full max-w-[39rem] overflow-y-auto rounded-3xl border border-forest/10 bg-[#fbf7ee] p-5 shadow-2xl sm:p-7">
+            <div className="mb-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsAuthModalOpen(false)}
+                className="flex size-10 items-center justify-center rounded-full border border-forest/15 text-forest transition-colors hover:border-burgundy hover:text-burgundy"
+                aria-label="Închide fereastra de autentificare"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <AuthPanel
+              defaultMode="login"
+              compact
+              redirectOnSuccess={false}
+              onSuccess={() => window.setTimeout(() => setIsAuthModalOpen(false), 700)}
+            />
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -466,9 +401,47 @@ function Field({
       <input
         type={type}
         placeholder={placeholder}
+        required={required}
         className="h-12 w-full rounded-full border border-forest/20 bg-cream px-4 text-sm text-forest outline-none placeholder:text-forest/40 focus:border-burgundy"
       />
     </label>
+  )
+}
+
+function CheckoutAddressFields() {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Prenume" required placeholder="Prenumele tău" />
+        <Field label="Nume" required placeholder="Numele tău" />
+      </div>
+
+      <Field label="Nume companie" placeholder="Opțional" />
+
+      <div className="grid gap-4 sm:grid-cols-[1.25fr_1fr]">
+        <SelectField label="Țară / Regiune" required defaultValue="România">
+          <option>România</option>
+          <option>Republica Moldova</option>
+        </SelectField>
+        <Field label="Telefon" required type="tel" placeholder="+40 712 345 678" />
+      </div>
+
+      <Field
+        label="Stradă"
+        required
+        placeholder="Adresă, nume stradă, număr etc."
+      />
+      <Field
+        label="Apartament, complex, unitate etc."
+        placeholder="Opțional"
+      />
+
+      <div className="grid gap-4 sm:grid-cols-[1fr_1fr_0.85fr]">
+        <Field label="Județ" required placeholder="Județul tău" />
+        <Field label="Municipiu / Localitate" required placeholder="Oraș / comună" />
+        <Field label="Cod poștal" required placeholder="000000" />
+      </div>
+    </div>
   )
 }
 
@@ -492,6 +465,7 @@ function SelectField({
       <div className="relative">
         <select
           defaultValue={defaultValue}
+          required={required}
           className="h-12 w-full appearance-none rounded-sm border border-forest/20 bg-cream px-4 text-sm text-forest outline-none focus:border-burgundy"
         >
           {children}

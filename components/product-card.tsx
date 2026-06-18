@@ -32,7 +32,7 @@ export function ProductCard({ pkg, index }: { pkg: AdoptPackage; index: number }
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-brown/80">
-              Produs 0{index + 1}
+              Pachet {index + 1}
             </p>
             <h2 className="mt-2 font-serif text-3xl font-bold leading-none text-forest">
               {pkg.name}
@@ -47,15 +47,6 @@ export function ProductCard({ pkg, index }: { pkg: AdoptPackage; index: number }
         <p className="mt-4 text-sm leading-relaxed text-forest/70">
           {pkg.description}
         </p>
-
-        <div className="mt-5 rounded-xl bg-cream/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brown">
-            Ce oferă
-          </p>
-          <p className="mt-2 text-sm font-semibold leading-relaxed text-forest">
-            {pkg.contents}
-          </p>
-        </div>
 
         <div className="mt-auto grid grid-cols-2 gap-3 border-t border-forest/10 pt-5">
           <Link

@@ -6,12 +6,12 @@ import { motion, useInView } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 
 const galleryImages = [
-  { id: 1, src: '/images/event-tasting.jpg', alt: 'Degustare în livadă' },
-  { id: 2, src: '/images/event-picnic.jpg', alt: 'Picnic în livadă' },
-  { id: 3, src: '/images/event-festival.jpg', alt: 'Festival de toamnă' },
-  { id: 4, src: '/images/event-workshop.jpg', alt: 'Atelier creativ' },
-  { id: 5, src: '/images/gallery-1.jpg', alt: 'Livada dimineața' },
-  { id: 6, src: '/images/gallery-5.jpg', alt: 'Familie în livadă' },
+  { id: 1, src: '/optimized/home-events/actfamilii1.webp', alt: 'Activități pentru familii în livadă' },
+  { id: 2, src: '/optimized/home-events/actfamilii2.webp', alt: 'Familie în livada Fructul Bucovinei' },
+  { id: 3, src: '/optimized/home-events/actfamilii3.webp', alt: 'Copii și familii în livadă' },
+  { id: 4, src: '/optimized/home-events/vanatoareadeoua.webp', alt: 'Vânătoare de ouă în livadă' },
+  { id: 5, src: '/optimized/home-events/campaniiverzi.webp', alt: 'Campanie verde în livadă' },
+  { id: 6, src: '/optimized/home-events/atelierdesuc.webp', alt: 'Atelier de suc de mere' },
 ]
 
 export function EventsSection() {
@@ -70,6 +70,8 @@ export function EventsSection() {
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
                 sizes="(max-width: 768px) 50vw, 33vw"
+                loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-0 bg-forest/0 group-hover:bg-forest/20 transition-all duration-500" />
             </motion.div>

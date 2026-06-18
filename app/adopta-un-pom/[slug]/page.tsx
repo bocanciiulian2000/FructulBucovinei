@@ -1,9 +1,10 @@
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react'
-import { AddToCartButton } from '@/components/add-to-cart-button'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Footer } from '@/components/footer'
 import { Navbar } from '@/components/navbar'
+import { PackagePurchaseControls } from '@/components/package-purchase-controls'
+import { TreePurposeField } from '@/components/tree-purpose-field'
 import { adoptPackages } from '@/lib/adopt-packages'
 
 type PackageDetailsPageProps = {
@@ -89,37 +90,20 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
 
             <div className="mt-8 space-y-5">
               <div>
-                <p className="text-sm font-bold text-forest md:text-lg">
-                  Cantitate {pkg.contents}
-                </p>
-                <p className="mt-2 text-2xl font-bold text-forest md:text-4xl">
-                  Preț: <span>{pkg.price}</span>
-                </p>
+                <div className="mt-2 flex items-center justify-between gap-4">
+                  <p className="text-2xl font-bold text-forest md:text-4xl">
+                    Preț: <span>{pkg.price}</span>
+                  </p>
+                  <p className="font-serif text-lg font-bold italic text-forest md:text-xl">
+                    În stoc
+                  </p>
+                </div>
                 <p className="mt-2 text-xs text-forest/70 md:text-base">
                   (TVA inclus, transport inclus).
-                </p>
-                <p className="mt-5 font-serif text-lg italic text-forest/65 md:text-xl">
-                  În stoc
                 </p>
               </div>
 
               <div>
-                <label htmlFor="apple-type" className="text-sm font-bold text-forest md:text-base">
-                  Tipul de mere
-                </label>
-                <select
-                  id="apple-type"
-                  className="mt-3 h-12 w-full rounded-xl border border-forest/20 bg-cream px-4 text-sm text-forest outline-none transition-colors focus:border-burgundy md:h-14 md:text-base"
-                  defaultValue=""
-                >
-                  <option value="">Alege o opțiune</option>
-                  <option>Mere roșii - Red Chief</option>
-                  <option>Mere Golden</option>
-                  <option>Mere mixte din livadă</option>
-                </select>
-              </div>
-
-              <div className="pt-4">
                 <h2 className="text-sm font-bold text-forest md:text-lg">
                   Completează detaliile pentru certificatul de adopție:
                 </h2>
@@ -127,58 +111,49 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
                 <div className="mt-4 space-y-4">
                   <div>
                     <label htmlFor="certificate-name" className="text-xs font-semibold text-forest md:text-sm">
-                      Numele care să apară pe certificat
+                      Cum vrei să apară numele pe certificatul de adopție?
                     </label>
                     <input
                       id="certificate-name"
                       type="text"
                       placeholder="Popescu Andrei"
+                      required
                       className="mt-2 h-12 w-full rounded-xl border border-forest/20 bg-cream px-4 text-sm text-forest outline-none transition-colors focus:border-burgundy md:text-base"
                     />
                   </div>
 
                   <div>
                       <label htmlFor="tree-name" className="text-xs font-semibold text-forest md:text-sm">
-                        Numele pomului adoptat
+                        Cum se va numi pomul tău?
                       </label>
                       <input
                         id="tree-name"
                         type="text"
                         placeholder="Dobi"
+                        required
                         className="mt-2 h-12 w-full rounded-xl border border-forest/20 bg-cream px-4 text-sm text-forest outline-none transition-colors focus:border-burgundy md:text-base"
                       />
                   </div>
 
+                  <TreePurposeField />
+
                   <div>
                     <label htmlFor="tree-message" className="text-xs font-semibold text-forest md:text-sm">
-                      Mesaj personalizat pentru pom
+                      Lasă un gând care să crească odată cu el (maxim 150 de caractere)
                     </label>
                     <textarea
                       id="tree-message"
-                      placeholder="Scrie aici mesajul care va fi pus în fața pomului."
+                      placeholder="Acest mesaj va fi asociat pomului adoptat și va spune povestea lui."
                       rows={4}
+                      maxLength={150}
+                      required
                       className="mt-2 w-full resize-none rounded-xl border border-forest/20 bg-cream px-4 py-3 text-sm leading-relaxed text-forest outline-none transition-colors focus:border-burgundy md:text-base"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-4 pt-2 sm:grid-cols-[8rem_1fr]">
-                <div className="grid h-14 grid-cols-3 overflow-hidden rounded-xl border border-brown/45 bg-cream text-forest">
-                  <button type="button" className="flex items-center justify-center transition-colors hover:bg-burgundy hover:text-cream" aria-label="Scade cantitatea">
-                    <Minus size={16} />
-                  </button>
-                  <span className="flex items-center justify-center text-sm font-bold">1</span>
-                  <button type="button" className="flex items-center justify-center transition-colors hover:bg-burgundy hover:text-cream" aria-label="Crește cantitatea">
-                    <Plus size={16} />
-                  </button>
-                </div>
-
-                <AddToCartButton
-                  pkg={pkg}
-                  className="h-14 rounded-xl bg-burgundy px-6 text-sm font-bold text-cream transition-colors hover:bg-forest md:text-base"
-                />
-              </div>
+              <PackagePurchaseControls pkg={pkg} />
             </div>
           </div>
         </div>
@@ -189,15 +164,28 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
           <div className="grid gap-10 md:grid-cols-2 md:gap-16 lg:gap-24">
             <div>
               <h2 className="font-serif text-3xl font-bold leading-none text-forest md:text-5xl">
-                Include
+                Ce primește clientul
               </h2>
               <ul className="mt-5 space-y-2 text-sm leading-snug text-forest/80 md:mt-6 md:text-lg">
-                {pkg.includes.map((item) => (
-                  <li key={item} className="flex gap-2">
-                    <span className="mt-3 size-1.5 shrink-0 rounded-full bg-burgundy" />
-                    <span>{item}</span>
-                  </li>
-                ))}
+                {pkg.includes.map((item) => {
+                  const isSubheading = item.startsWith('COȘ CU PRODUSE')
+
+                  return (
+                    <li
+                      key={item}
+                      className={isSubheading ? 'pt-3 font-bold uppercase tracking-wide text-burgundy' : 'flex gap-2'}
+                    >
+                      {isSubheading ? (
+                        item
+                      ) : (
+                        <>
+                          <span className="mt-3 size-1.5 shrink-0 rounded-full bg-burgundy" />
+                          <span>{item}</span>
+                        </>
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
             </div>
 

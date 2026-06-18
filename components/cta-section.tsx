@@ -66,21 +66,21 @@ export function CtaSection() {
             <div className="mt-8 max-w-2xl space-y-5 text-lg text-forest/85 md:mt-10 md:space-y-7 md:text-xl">
               <div className="flex items-center gap-4">
                 <MapPin size={30} className="shrink-0 fill-brown text-brown" />
-                <span>Suceava, Bucovina, România</span>
+                <span>Sat Rădășeni, Str. Părului 1, județul Suceava, cod 727460</span>
               </div>
               <a
-                href="tel:+40700000000"
+                href="tel:+40764417635"
                 className="flex items-center gap-4 transition-colors hover:text-burgundy"
               >
                 <Phone size={30} className="shrink-0 fill-brown text-brown" />
-                <span>+40 700 000 000</span>
+                <span>+40 764 417 635</span>
               </a>
               <a
-                href="mailto:contact@fructulbucovinei.ro"
+                href="mailto:fructulbucovinei@gmail.com"
                 className="flex items-center gap-4 transition-colors hover:text-burgundy"
               >
                 <Mail size={30} className="shrink-0 fill-brown text-brown" />
-                <span className="break-all">contact@fructulbucovinei.ro</span>
+                <span className="break-all">fructulbucovinei@gmail.com</span>
               </a>
             </div>
 

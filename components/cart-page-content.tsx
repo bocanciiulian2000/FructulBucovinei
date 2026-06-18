@@ -10,7 +10,8 @@ import {
   getCartSubtotal,
   parseCartPrice,
   readCart,
-  writeCart,
+  removeCartItem,
+  setCartItemQuantity,
   type CartItem,
 } from '@/lib/cart'
 
@@ -44,24 +45,12 @@ export function CartPageContent() {
   const discountPercent = appliedCoupon ? promoCodes[appliedCoupon] : 0
   const total = subtotal * (1 - discountPercent / 100)
 
-  const updateCart = (nextCart: CartItem[]) => {
-    setCartItems(nextCart)
-    writeCart(nextCart)
-  }
-
-  const updateQuantity = (slug: string, direction: 1 | -1) => {
-    const nextCart = cartItems
-      .map((item) =>
-        item.slug === slug
-          ? { ...item, quantity: Math.max(1, item.quantity + direction) }
-          : item
-      )
-
-    updateCart(nextCart)
+  const updateQuantity = (slug: string, quantity: number) => {
+    setCartItems(setCartItemQuantity(slug, quantity))
   }
 
   const removeItem = (slug: string) => {
-    updateCart(cartItems.filter((item) => item.slug !== slug))
+    setCartItems(removeCartItem(slug))
   }
 
   const applyCoupon = () => {
@@ -100,14 +89,14 @@ export function CartPageContent() {
               Coșul este gol
             </p>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-forest/65">
-              Adaugă produse din pagina de produse, apoi revino aici pentru a
+              Adaugă pachete din pagina Adoptă un pom, apoi revino aici pentru a
               finaliza comanda.
             </p>
             <Link
-              href="/produse"
+              href="/adopta-un-pom"
               className="mt-7 inline-flex rounded-sm bg-burgundy px-6 py-3 text-xs font-bold uppercase tracking-wide text-cream transition-colors hover:bg-forest"
             >
-              Vezi produsele
+              Vezi pachetele
             </Link>
           </div>
         ) : (
@@ -134,14 +123,16 @@ export function CartPageContent() {
                     <h2 className="font-serif text-2xl font-bold leading-none text-forest md:text-3xl">
                       {item.name}
                     </h2>
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.slug)}
-                      className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-brown/55 transition-colors hover:text-burgundy"
-                    >
-                      <Trash2 size={13} />
-                      Înlătură
-                    </button>
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.slug)}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-burgundy transition-colors hover:text-forest"
+                      >
+                        <Trash2 size={13} />
+                        Șterge produsul
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -156,18 +147,26 @@ export function CartPageContent() {
                   <div className="grid h-11 w-28 grid-cols-3 overflow-hidden rounded-full border border-forest/15 bg-cream text-forest">
                     <button
                       type="button"
-                      onClick={() => updateQuantity(item.slug, -1)}
-                      className="flex items-center justify-center transition-colors hover:bg-burgundy hover:text-cream"
+                      onClick={() => updateQuantity(item.slug, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                      className="flex items-center justify-center transition-colors hover:bg-burgundy hover:text-cream disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-forest"
                       aria-label="Scade cantitatea"
                     >
                       <Minus size={14} />
                     </button>
-                    <span className="flex items-center justify-center text-sm font-bold">
-                      {item.quantity}
-                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={item.quantity}
+                      onChange={(event) =>
+                        updateQuantity(item.slug, Number(event.target.value))
+                      }
+                      aria-label={`Cantitate pentru ${item.name}`}
+                      className="min-w-0 bg-transparent text-center text-sm font-bold text-forest outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    />
                     <button
                       type="button"
-                      onClick={() => updateQuantity(item.slug, 1)}
+                      onClick={() => updateQuantity(item.slug, item.quantity + 1)}
                       className="flex items-center justify-center transition-colors hover:bg-burgundy hover:text-cream"
                       aria-label="Crește cantitatea"
                     >

@@ -170,8 +170,11 @@ export default function GaleriePage() {
               </h2>
             </div>
             <p className="max-w-3xl text-lg leading-relaxed text-forest/80 md:text-xl lg:ml-auto">
-              Am păstrat aici cadre care spun povestea livezii: dimineți liniștite, flori de primăvară,
-              mere culese cu grijă și întâlniri cu oamenii care vin să se bucure de natură.
+              Ne plac poveștile spuse prin imagini. Dar cele mai frumoase nu sunt cele fotografiate, ci cele
+              trăite. Fiecare fotografie din această galerie surprinde o parte din drumul nostru: rădăcinile care
+              ne leagă, oamenii care îngrijesc livada, anotimpurile care o transformă și fructele care cresc cu
+              răbdare, an după an. Până ne vom întâlni printre pomi, te invităm să privești cu atenție. Citește
+              în imagini trecutul nostru, descoperă prezentul și imaginează-ți viitorul pe care îl vom construi.
             </p>
           </div>
 
