@@ -3,6 +3,7 @@ const { URL } = require('url')
 const mysql = require('mysql2/promise')
 const nodemailer = require('nodemailer')
 const QRCode = require('qrcode')
+const { createClient: createRedisClient } = require('redis')
 const {
   generateSecret: generateTotpSecret,
   generateURI: generateTotpUri,
@@ -27,6 +28,9 @@ const PASSWORD_RESET_TTL_MINUTES = 30
 
 let dbClient = null
 let mailTransporter = null
+let redisClient = null
+let redisConnectPromise = null
+let redisUnavailableUntil = 0
 const rateLimitBuckets = new Map()
 
 const RATE_LIMIT_RULES = [
@@ -66,6 +70,50 @@ function getDbClient() {
   }
 
   return dbClient
+}
+
+async function getRedisClient() {
+  const socketPath = process.env.REDIS_SOCKET_PATH
+
+  if (!socketPath) {
+    return null
+  }
+
+  const now = Date.now()
+
+  if (redisUnavailableUntil > now) {
+    return null
+  }
+
+  if (redisClient?.isOpen) {
+    return redisClient
+  }
+
+  if (!redisConnectPromise) {
+    redisClient = createRedisClient({
+      socket: {
+        path: socketPath,
+      },
+      database: Number(process.env.REDIS_DB || 0),
+    })
+
+    redisClient.on('error', (error) => {
+      console.error('Redis error:', error)
+    })
+
+    redisConnectPromise = redisClient.connect()
+  }
+
+  try {
+    await redisConnectPromise
+    return redisClient
+  } catch (error) {
+    console.error('Redis connection failed, falling back to memory rate limit:', error)
+    redisClient = null
+    redisConnectPromise = null
+    redisUnavailableUntil = Date.now() + 60 * 1000
+    return null
+  }
 }
 
 function getFirstConfiguredUrl(...values) {
@@ -119,17 +167,30 @@ function cleanupRateLimitBuckets(now) {
   }
 }
 
-function checkRateLimit(request, response, routePath) {
-  const rule = findRateLimitRule(request.method, routePath)
+function createRateLimitKey(rule, ip) {
+  const digest = crypto
+    .createHash('sha256')
+    .update(`${rule.method}:${String(rule.path)}:${ip}`)
+    .digest('hex')
+    .slice(0, 32)
 
-  if (!rule) {
-    return true
-  }
+  return `fb:rate-limit:${digest}`
+}
 
+function sendRateLimitExceeded(response, request, retryAfterSeconds) {
+  sendJson(
+    response,
+    request,
+    429,
+    { error: 'Prea multe încercări. Te rugăm să încerci din nou puțin mai târziu.' },
+    { 'Retry-After': String(retryAfterSeconds) }
+  )
+}
+
+function checkMemoryRateLimit(request, response, rule, ip) {
   const now = Date.now()
   cleanupRateLimitBuckets(now)
 
-  const ip = getClientIp(request)
   const key = `${rule.method}:${rule.path}:${ip}`
   const currentBucket = rateLimitBuckets.get(key)
   const bucket = currentBucket && currentBucket.resetAt > now
@@ -144,15 +205,62 @@ function checkRateLimit(request, response, routePath) {
   }
 
   const retryAfterSeconds = Math.max(1, Math.ceil((bucket.resetAt - now) / 1000))
-
-  sendJson(
-    response,
-    request,
-    429,
-    { error: 'Prea multe încercări. Te rugăm să încerci din nou puțin mai târziu.' },
-    { 'Retry-After': String(retryAfterSeconds) }
-  )
+  sendRateLimitExceeded(response, request, retryAfterSeconds)
   return false
+}
+
+async function checkRedisRateLimit(request, response, rule, ip) {
+  const client = await getRedisClient()
+
+  if (!client) {
+    return null
+  }
+
+  const key = createRateLimitKey(rule, ip)
+  const windowSeconds = Math.max(1, Math.ceil(rule.windowMs / 1000))
+
+  try {
+    const count = await client.incr(key)
+
+    if (count === 1) {
+      await client.expire(key, windowSeconds)
+    }
+
+    if (count <= rule.limit) {
+      return true
+    }
+
+    let ttl = await client.ttl(key)
+
+    if (ttl < 1) {
+      ttl = windowSeconds
+      await client.expire(key, windowSeconds)
+    }
+
+    sendRateLimitExceeded(response, request, ttl)
+    return false
+  } catch (error) {
+    console.error('Redis rate limit failed, falling back to memory rate limit:', error)
+    redisUnavailableUntil = Date.now() + 60 * 1000
+    return null
+  }
+}
+
+async function checkRateLimit(request, response, routePath) {
+  const rule = findRateLimitRule(request.method, routePath)
+
+  if (!rule) {
+    return true
+  }
+
+  const ip = getClientIp(request)
+  const redisResult = await checkRedisRateLimit(request, response, rule, ip)
+
+  if (redisResult !== null) {
+    return redisResult
+  }
+
+  return checkMemoryRateLimit(request, response, rule, ip)
 }
 
 function hashVerificationToken(token) {
@@ -2469,7 +2577,7 @@ async function handleRequest(request, response) {
       return
     }
 
-    if (!checkRateLimit(request, response, routePath)) {
+    if (!(await checkRateLimit(request, response, routePath))) {
       return
     }
 
