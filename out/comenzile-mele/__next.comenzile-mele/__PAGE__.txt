@@ -1,6 +1,8 @@
 1:"$Sreact.fragment"
-2:I[19917,["/_next/static/chunks/17s1fku~-94c5.js","/_next/static/chunks/03.lbre~qq_m0.js","/_next/static/chunks/0lw3r10_1lfzi.js"],"OrdersPageContent"]
-3:I[2818,["/_next/static/chunks/17s1fku~-94c5.js","/_next/static/chunks/03.lbre~qq_m0.js"],"OutletBoundary"]
-4:"$Sreact.suspense"
-0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{}],[["$","script","script-0",{"src":"/_next/static/chunks/0lw3r10_1lfzi.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"qJF4KOx-q8ZujxWgUxAUZ"}
-5:null
+2:I[63780,["/_next/static/chunks/0-ur7uu5lcsyz.js","/_next/static/chunks/0d3shmwh5_nmn.js","/_next/static/chunks/0x.iee_pqwxwd.js","/_next/static/chunks/0qs7-shlqnb4a.js","/_next/static/chunks/09_m2bclgu5ci.js"],"Navbar"]
+3:I[19917,["/_next/static/chunks/0-ur7uu5lcsyz.js","/_next/static/chunks/0d3shmwh5_nmn.js","/_next/static/chunks/0x.iee_pqwxwd.js","/_next/static/chunks/0qs7-shlqnb4a.js","/_next/static/chunks/09_m2bclgu5ci.js"],"OrdersPageContent"]
+4:I[76841,["/_next/static/chunks/0-ur7uu5lcsyz.js","/_next/static/chunks/0d3shmwh5_nmn.js","/_next/static/chunks/0x.iee_pqwxwd.js","/_next/static/chunks/0qs7-shlqnb4a.js","/_next/static/chunks/09_m2bclgu5ci.js"],"Footer"]
+5:I[97367,["/_next/static/chunks/0-ur7uu5lcsyz.js","/_next/static/chunks/0d3shmwh5_nmn.js","/_next/static/chunks/0x.iee_pqwxwd.js"],"OutletBoundary"]
+6:"$Sreact.suspense"
+0:{"rsc":["$","$1","c",{"children":[["$","main",null,{"className":"relative min-h-screen overflow-hidden bg-cream text-forest","children":[["$","$L2",null,{"solid":true}],["$","$L3",null,{}],["$","$L4",null,{}]]}],[["$","script","script-0",{"src":"/_next/static/chunks/0qs7-shlqnb4a.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/09_m2bclgu5ci.js","async":true}]],["$","$L5",null,{"children":["$","$6",null,{"name":"Next.MetadataOutlet","children":"$@7"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"MTjVLS9hy7XiMbDp4Bbp_"}
+7:null

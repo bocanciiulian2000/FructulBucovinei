@@ -222,11 +222,11 @@ export function Footer() {
                 </li>
                 <li>
                   <a
-                    href="mailto:fructulbucovinei@gmail.com"
+                    href="mailto:contact@fructulbucovinei.ro"
                     className="flex items-center gap-3 hover:text-burgundy"
                   >
                     <Mail size={18} className="shrink-0 text-brown" />
-                    fructulbucovinei@gmail.com
+                    contact@fructulbucovinei.ro
                   </a>
                 </li>
               </ul>

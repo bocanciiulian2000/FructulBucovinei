@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { Package, ShoppingBag } from 'lucide-react'
+import { ShoppingBag } from 'lucide-react'
 import { AuthPanel } from '@/components/auth-panel'
 import { useAuthSession } from '@/components/auth-session-provider'
+import { LocalOrdersList } from '@/components/local-orders-list'
 
 export function OrdersPageContent() {
   const { user, loading } = useAuthSession()
@@ -68,20 +69,7 @@ export function OrdersPageContent() {
       </div>
 
       <div className="mt-10 rounded-3xl border border-forest/10 bg-[#fbf7ee] p-6 shadow-sm md:p-8">
-        <div className="flex items-center gap-4">
-          <div className="flex size-14 items-center justify-center rounded-full bg-cream text-burgundy">
-            <Package size={22} />
-          </div>
-          <div>
-            <p className="font-serif text-3xl font-bold text-forest">
-              Nu ai comenzi încă
-            </p>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-forest/70">
-              După ce finalizezi o comandă, vei vedea aici istoricul ei și
-              detaliile asociate.
-            </p>
-          </div>
-        </div>
+        <LocalOrdersList />
       </div>
     </section>
   )

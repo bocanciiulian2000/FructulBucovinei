@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import { Cormorant_Garamond, Manrope } from 'next/font/google'
 import { AuthSessionProvider } from '@/components/auth-session-provider'
 import { SmoothScrollProvider } from '@/components/smooth-scroll-provider'
 import { SiteLock } from '@/components/site-lock'
+import { CookieConsentBanner } from '@/components/cookie-consent-banner'
 import './globals.css'
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -55,11 +57,45 @@ export default function RootLayout({
       className={`${cormorantGaramond.variable} ${manrope.variable} bg-cream`}
     >
       <body className="font-sans antialiased overflow-x-hidden">
+        <Script
+          id="google-consent-default"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('consent', 'default', {
+                analytics_storage: 'denied',
+                ad_storage: 'denied',
+                ad_user_data: 'denied',
+                ad_personalization: 'denied',
+                wait_for_update: 500
+              });
+            `,
+          }}
+        />
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-RYDSYCNL3F"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              gtag('js', new Date());
+              gtag('config', 'G-RYDSYCNL3F', {
+                anonymize_ip: true
+              });
+            `,
+          }}
+        />
         <SmoothScrollProvider>
           <AuthSessionProvider>
             <SiteLock>{children}</SiteLock>
           </AuthSessionProvider>
         </SmoothScrollProvider>
+        <CookieConsentBanner />
       </body>
     </html>
   )

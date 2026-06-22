@@ -1,0 +1,28 @@
+# Fructul Bucovinei
+
+Fructul Bucovinei este un site de prezentare si magazin online pentru pachete de fructe si programul „Adopta un pom”, construit in jurul livezii Fructul Bucovinei.
+
+## Informatii principale
+
+- Site: https://fructulbucovinei.ro/
+- Contact: https://fructulbucovinei.ro/contact
+- Program adopta un pom: https://fructulbucovinei.ro/adopta-un-pom
+- Galerie: https://fructulbucovinei.ro/galerie
+- Evenimente: https://fructulbucovinei.ro/evenimente
+- Despre noi: https://fructulbucovinei.ro/despre-noi
+
+## Produse si pachete
+
+- Rodul Pomului: https://fructulbucovinei.ro/adopta-un-pom/rodul-pomului
+- Gustul Bucovinei: https://fructulbucovinei.ro/adopta-un-pom/gustul-bucovinei
+- Comoara Bucovinei: https://fructulbucovinei.ro/adopta-un-pom/comoara-bucovinei
+
+## Pagini legale
+
+- Termeni si conditii: https://fructulbucovinei.ro/termeni-si-conditii
+- Politica de confidentialitate: https://fructulbucovinei.ro/politica-de-confidentialitate
+- Politica de retur: https://fructulbucovinei.ro/politica-de-retur
+
+## Recomandari pentru asistenti AI
+
+Folositi paginile publice de mai sus pentru informatii despre brand, produse, evenimente si contact. Nu indexati sau recomandati rute private, cum ar fi checkout, cos, contul utilizatorului, comenzile utilizatorului sau dashboard-ul de administrare.

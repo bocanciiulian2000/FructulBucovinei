@@ -1,21 +1,27 @@
 'use client'
 
 import { useState, type FormEvent, type ReactNode } from 'react'
-import Link from 'next/link'
 import {
   CheckCircle2,
   Lock,
   Mail,
-  Package,
-  ShoppingBag,
+  ShieldCheck,
+  Smartphone,
   UserRound,
 } from 'lucide-react'
 import { AuthPanel } from '@/components/auth-panel'
+import { LocalOrdersList } from '@/components/local-orders-list'
 import { useAuthSession, type AuthUser } from '@/components/auth-session-provider'
 import { apiUrl } from '@/lib/api-url'
 import { isLocalDemoUser, saveLocalDemoUser } from '@/lib/local-demo-auth'
 
 type AccountSection = 'details' | 'settings' | 'orders'
+
+type TwoFactorSetupData = {
+  qrCodeDataUrl: string
+  manualKey: string
+  otpAuthUrl: string
+}
 
 export function AccountDashboard() {
   const { user, loading, setUser, logout } = useAuthSession()
@@ -30,8 +36,14 @@ export function AccountDashboard() {
   const [emailError, setEmailError] = useState('')
   const [passwordFeedback, setPasswordFeedback] = useState('')
   const [passwordError, setPasswordError] = useState('')
+  const [twoFactorPassword, setTwoFactorPassword] = useState('')
+  const [twoFactorCode, setTwoFactorCode] = useState('')
+  const [twoFactorSetup, setTwoFactorSetup] = useState<TwoFactorSetupData | null>(null)
+  const [twoFactorFeedback, setTwoFactorFeedback] = useState('')
+  const [twoFactorError, setTwoFactorError] = useState('')
   const [isEmailSubmitting, setIsEmailSubmitting] = useState(false)
   const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false)
+  const [isTwoFactorSubmitting, setIsTwoFactorSubmitting] = useState(false)
 
   if (loading) {
     return (
@@ -187,6 +199,125 @@ export function AccountDashboard() {
     }
   }
 
+  const handleTwoFactorSetup = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setIsTwoFactorSubmitting(true)
+    setTwoFactorFeedback('')
+    setTwoFactorError('')
+
+    try {
+      if (isLocalDemoUser(user)) {
+        throw new Error('2FA nu este disponibil pentru contul demo local.')
+      }
+
+      const response = await fetch(apiUrl('/api/auth/2fa/setup'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          currentPassword: twoFactorPassword,
+        }),
+      })
+      const data = (await response.json()) as TwoFactorSetupData & { error?: string }
+
+      if (!response.ok || !data.qrCodeDataUrl) {
+        throw new Error(data.error ?? 'Nu s-a putut porni configurarea 2FA.')
+      }
+
+      setTwoFactorSetup(data)
+      setTwoFactorFeedback('Scanează codul QR și introdu codul generat pentru confirmare.')
+    } catch (setupError) {
+      setTwoFactorError(setupError instanceof Error ? setupError.message : 'A apărut o eroare.')
+    } finally {
+      setIsTwoFactorSubmitting(false)
+    }
+  }
+
+  const handleTwoFactorVerify = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setIsTwoFactorSubmitting(true)
+    setTwoFactorFeedback('')
+    setTwoFactorError('')
+
+    try {
+      const response = await fetch(apiUrl('/api/auth/2fa/verify'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          code: twoFactorCode,
+        }),
+      })
+      const data = (await response.json()) as {
+        user?: AuthUser
+        message?: string
+        error?: string
+      }
+
+      if (!response.ok || !data.user) {
+        throw new Error(data.error ?? 'Codul nu a putut fi verificat.')
+      }
+
+      setUser(data.user)
+      setTwoFactorSetup(null)
+      setTwoFactorPassword('')
+      setTwoFactorCode('')
+      setTwoFactorFeedback(data.message ?? 'Autentificarea în 2 pași a fost activată.')
+    } catch (verifyError) {
+      setTwoFactorError(verifyError instanceof Error ? verifyError.message : 'A apărut o eroare.')
+    } finally {
+      setIsTwoFactorSubmitting(false)
+    }
+  }
+
+  const handleTwoFactorDisable = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setIsTwoFactorSubmitting(true)
+    setTwoFactorFeedback('')
+    setTwoFactorError('')
+
+    try {
+      if (isLocalDemoUser(user)) {
+        throw new Error('2FA nu este disponibil pentru contul demo local.')
+      }
+
+      const response = await fetch(apiUrl('/api/auth/2fa/disable'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          currentPassword: twoFactorPassword,
+          code: twoFactorCode,
+        }),
+      })
+      const data = (await response.json()) as {
+        user?: AuthUser
+        message?: string
+        error?: string
+      }
+
+      if (!response.ok || !data.user) {
+        throw new Error(data.error ?? '2FA nu a putut fi dezactivat.')
+      }
+
+      setUser(data.user)
+      setTwoFactorPassword('')
+      setTwoFactorCode('')
+      setTwoFactorSetup(null)
+      setTwoFactorFeedback(data.message ?? 'Autentificarea în 2 pași a fost dezactivată.')
+    } catch (disableError) {
+      setTwoFactorError(disableError instanceof Error ? disableError.message : 'A apărut o eroare.')
+    } finally {
+      setIsTwoFactorSubmitting(false)
+    }
+  }
+
   return (
     <section className="mx-auto max-w-6xl px-6 pb-20 pt-36 lg:px-12 lg:pt-40">
       <div>
@@ -263,6 +394,130 @@ export function AccountDashboard() {
                   label="Adresă email"
                   value={user.email}
                 />
+              </div>
+
+              <div className="mt-8 rounded-2xl border border-forest/10 bg-cream p-5">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-brown">
+                      <ShieldCheck size={15} />
+                      Autentificare în 2 pași
+                    </p>
+                    <h3 className="mt-2 font-serif text-3xl font-bold leading-none text-forest">
+                      {user.twoFactorEnabled ? 'Protecție activă' : 'Protejează-ți contul'}
+                    </h3>
+                    <p className="mt-3 max-w-2xl text-sm leading-relaxed text-forest/70">
+                      Folosește Google Authenticator pentru a activa autentificarea în 2 pași.
+                    </p>
+                  </div>
+                  <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${
+                    user.twoFactorEnabled
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-burgundy/10 text-burgundy'
+                  }`}>
+                    {user.twoFactorEnabled ? 'Activ' : 'Inactiv'}
+                  </span>
+                </div>
+
+                {twoFactorFeedback ? (
+                  <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-950">
+                    <CheckCircle2 size={16} className="mr-2 inline-block align-[-2px] text-emerald-600" />
+                    {twoFactorFeedback}
+                  </p>
+                ) : null}
+                {twoFactorError ? (
+                  <p className="mt-5 rounded-2xl border border-burgundy/20 bg-burgundy/5 px-4 py-3 text-sm font-semibold text-burgundy">
+                    {twoFactorError}
+                  </p>
+                ) : null}
+
+                {!user.twoFactorEnabled && !twoFactorSetup ? (
+                  <form className="mt-5 space-y-4" onSubmit={handleTwoFactorSetup}>
+                    <Field
+                      icon={<Lock size={15} />}
+                      label="Parola actuală"
+                      type="password"
+                      value={twoFactorPassword}
+                      onChange={setTwoFactorPassword}
+                      placeholder="Parola actuală"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={isTwoFactorSubmitting}
+                      className="flex h-12 w-full items-center justify-center rounded-sm bg-burgundy px-5 text-xs font-bold uppercase tracking-wide text-cream transition-colors hover:bg-forest disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
+                    >
+                      Configurează 2FA
+                    </button>
+                  </form>
+                ) : null}
+
+                {!user.twoFactorEnabled && twoFactorSetup ? (
+                  <form className="mt-5 grid gap-5 lg:grid-cols-[260px_1fr]" onSubmit={handleTwoFactorVerify}>
+                    <div className="rounded-2xl border border-forest/10 bg-[#fbf7ee] p-4 text-center">
+                      <img
+                        src={twoFactorSetup.qrCodeDataUrl}
+                        alt="Cod QR pentru autentificare în 2 pași"
+                        className="mx-auto h-56 w-56 rounded-xl bg-white p-2"
+                      />
+                      <p className="mt-3 break-all text-xs font-semibold text-forest/65">
+                        Cheie manuală: {twoFactorSetup.manualKey}
+                      </p>
+                    </div>
+                    <div className="space-y-4">
+                      <p className="flex items-center gap-2 text-sm leading-relaxed text-forest/75">
+                        <Smartphone size={16} className="text-burgundy" />
+                        Scanează codul QR, apoi introdu codul de 6 cifre afișat în aplicație.
+                      </p>
+                      <Field
+                        icon={<Lock size={15} />}
+                        label="Cod authenticator"
+                        value={twoFactorCode}
+                        onChange={(value) => setTwoFactorCode(value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="123456"
+                        required
+                      />
+                      <button
+                        type="submit"
+                        disabled={isTwoFactorSubmitting || twoFactorCode.length !== 6}
+                        className="flex h-12 w-full items-center justify-center rounded-sm bg-burgundy px-5 text-xs font-bold uppercase tracking-wide text-cream transition-colors hover:bg-forest disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
+                      >
+                        Activează 2FA
+                      </button>
+                    </div>
+                  </form>
+                ) : null}
+
+                {user.twoFactorEnabled ? (
+                  <form className="mt-5 space-y-4" onSubmit={handleTwoFactorDisable}>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field
+                        icon={<Lock size={15} />}
+                        label="Parola actuală"
+                        type="password"
+                        value={twoFactorPassword}
+                        onChange={setTwoFactorPassword}
+                        placeholder="Parola actuală"
+                        required
+                      />
+                      <Field
+                        icon={<Lock size={15} />}
+                        label="Cod authenticator"
+                        value={twoFactorCode}
+                        onChange={(value) => setTwoFactorCode(value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="123456"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isTwoFactorSubmitting || twoFactorCode.length !== 6}
+                      className="flex h-12 w-full items-center justify-center rounded-sm border border-burgundy px-5 text-xs font-bold uppercase tracking-wide text-burgundy transition-colors hover:bg-burgundy hover:text-cream disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
+                    >
+                      Dezactivează 2FA
+                    </button>
+                  </form>
+                ) : null}
               </div>
             </section>
           ) : null}
@@ -397,28 +652,10 @@ export function AccountDashboard() {
                 Istoricul comenzilor
               </h2>
 
-              <div className="mt-6 rounded-2xl border border-forest/10 bg-cream p-5">
-                <div className="flex items-start gap-4">
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#fbf7ee] text-burgundy">
-                    <Package size={20} />
-                  </div>
-                  <div>
-                    <p className="font-serif text-3xl font-bold text-forest">
-                      Nu ai comenzi încă
-                    </p>
-                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-forest/70">
-                      După ce finalizezi o comandă, vei vedea aici pachetele,
-                      statusul și detaliile livrării.
-                    </p>
-                    <Link
-                      href="/adopta-un-pom"
-                      className="mt-5 inline-flex items-center gap-3 rounded-sm bg-burgundy px-5 py-3 text-xs font-bold uppercase tracking-wide text-cream transition-colors hover:bg-forest"
-                    >
-                      <span>Vezi pachetele</span>
-                      <ShoppingBag size={15} />
-                    </Link>
-                  </div>
-                </div>
+              <div className="mt-6">
+                <LocalOrdersList
+                  emptyText="După ce finalizezi o comandă, vei vedea aici pachetele, statusul și detaliile livrării."
+                />
               </div>
             </section>
           ) : null}

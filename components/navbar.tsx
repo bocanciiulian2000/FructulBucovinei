@@ -18,6 +18,17 @@ import {
   setCartItemQuantity,
   type CartItem,
 } from '@/lib/cart'
+import { ADMIN_DASHBOARD_PATH } from '@/lib/admin-path'
+import { reconcileCartWithInventory } from '@/lib/cart-inventory'
+import {
+  clearAppliedPromoCode,
+  getPromoDiscountAmount,
+  getPromoDiscountPercent,
+  normalizePromoCode,
+  PROMO_UPDATED_EVENT,
+  readAppliedPromoCode,
+  writeAppliedPromoCode,
+} from '@/lib/promotions'
 
 const navLinks = [
   { href: '/', label: 'Acasă' },
@@ -27,11 +38,6 @@ const navLinks = [
   { href: '/galerie', label: 'Galerie' },
 ]
 
-const promoCodes: Record<string, number> = {
-  BUCOVINA10: 10,
-  FRUCTUL10: 10,
-  LIVADA15: 15,
-}
 
 type NavbarProps = {
   solid?: boolean
@@ -45,6 +51,7 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isPromoOpen, setIsPromoOpen] = useState(false)
+  const [canUseHoverMenus, setCanUseHoverMenus] = useState(false)
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromoCode, setAppliedPromoCode] = useState('')
   const [promoError, setPromoError] = useState('')
@@ -54,26 +61,34 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
   const isSolid = true
   const cartQuantity = getCartQuantity(cartItems)
   const subtotal = getCartSubtotal(cartItems)
-  const discountPercent = appliedPromoCode ? promoCodes[appliedPromoCode] : 0
-  const discountedSubtotal = subtotal * (1 - discountPercent / 100)
+  const discountPercent = getPromoDiscountPercent(appliedPromoCode)
+  const discountAmount = getPromoDiscountAmount(subtotal, appliedPromoCode)
+  const discountedSubtotal = subtotal - discountAmount
 
   const applyPromoCode = () => {
-    const normalizedCode = promoCode.trim().toUpperCase()
+    const normalizedCode = normalizePromoCode(promoCode)
 
     if (!normalizedCode) {
       setPromoError('Introdu un cod promoțional.')
-      setAppliedPromoCode('')
       return
     }
 
-    if (!promoCodes[normalizedCode]) {
+    const appliedCode = writeAppliedPromoCode(normalizedCode)
+
+    if (!appliedCode) {
       setPromoError('Codul introdus nu este valid.')
-      setAppliedPromoCode('')
       return
     }
 
-    setAppliedPromoCode(normalizedCode)
-    setPromoCode(normalizedCode)
+    setAppliedPromoCode(appliedCode)
+    setPromoCode(appliedCode)
+    setPromoError('')
+  }
+
+  const removePromoCode = () => {
+    clearAppliedPromoCode()
+    setAppliedPromoCode('')
+    setPromoCode('')
     setPromoError('')
   }
 
@@ -124,7 +139,11 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
   }, [pathname])
 
   useEffect(() => {
-    const syncCart = () => setCartItems(readCart())
+    const syncCart = () => {
+      const currentCart = readCart()
+      setCartItems(currentCart)
+      void reconcileCartWithInventory(currentCart).then(setCartItems)
+    }
 
     syncCart()
     window.addEventListener(CART_UPDATED_EVENT, syncCart)
@@ -134,6 +153,33 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
       window.removeEventListener(CART_UPDATED_EVENT, syncCart)
       window.removeEventListener('storage', syncCart)
     }
+  }, [])
+
+  useEffect(() => {
+    const syncPromoCode = () => {
+      const code = readAppliedPromoCode()
+      setAppliedPromoCode(code)
+      setPromoCode(code)
+    }
+
+    syncPromoCode()
+    window.addEventListener(PROMO_UPDATED_EVENT, syncPromoCode)
+    window.addEventListener('storage', syncPromoCode)
+
+    return () => {
+      window.removeEventListener(PROMO_UPDATED_EVENT, syncPromoCode)
+      window.removeEventListener('storage', syncPromoCode)
+    }
+  }, [])
+
+  useEffect(() => {
+    const hoverMediaQuery = window.matchMedia('(hover: hover) and (pointer: fine)')
+    const updateHoverPreference = () => setCanUseHoverMenus(hoverMediaQuery.matches)
+
+    updateHoverPreference()
+    hoverMediaQuery.addEventListener('change', updateHoverPreference)
+
+    return () => hoverMediaQuery.removeEventListener('change', updateHoverPreference)
   }, [])
 
   useEffect(() => {
@@ -227,8 +273,8 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
               <div
                 ref={accountMenuRef}
                 className="relative"
-                onMouseEnter={() => user && setIsUserMenuOpen(true)}
-                onMouseLeave={() => user && setIsUserMenuOpen(false)}
+                onMouseEnter={() => canUseHoverMenus && user && setIsUserMenuOpen(true)}
+                onMouseLeave={() => canUseHoverMenus && user && setIsUserMenuOpen(false)}
               >
                 <button
                   type="button"
@@ -262,7 +308,7 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.98 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute right-0 top-full z-[90] mt-3 w-64 overflow-hidden rounded-2xl border border-forest/10 bg-cream p-2 shadow-2xl"
+                      className="fixed right-4 top-24 z-[90] mt-0 w-[calc(100vw-2rem)] max-w-72 overflow-hidden rounded-2xl border border-forest/10 bg-cream p-2 shadow-2xl sm:right-6 md:absolute md:right-0 md:top-full md:mt-3 md:w-64"
                     >
                       <div className="px-4 py-3">
                         <p className="text-xs font-bold uppercase tracking-wide text-brown">
@@ -290,6 +336,16 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                           Comenzile mele
                           <ArrowRight size={14} />
                         </Link>
+                        {user.role === 'admin' && (
+                          <Link
+                            href={ADMIN_DASHBOARD_PATH}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-burgundy transition-colors hover:bg-burgundy/10"
+                          >
+                            Admin
+                            <ArrowRight size={14} />
+                          </Link>
+                        )}
                         <button
                           type="button"
                           onClick={async () => {
@@ -569,9 +625,18 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                     </div>
 
                     {discountPercent > 0 && (
-                      <p className="mt-2 text-right text-xs font-semibold text-forest/60">
-                        Reducere aplicată: {discountPercent}% prin {appliedPromoCode}
-                      </p>
+                      <div className="mt-2 flex items-center justify-between gap-3 text-xs font-semibold text-forest/60">
+                        <span>
+                          Reducere: -{formatCartPrice(discountAmount)} lei prin {appliedPromoCode}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={removePromoCode}
+                          className="font-bold uppercase tracking-wide text-burgundy transition-colors hover:text-forest"
+                        >
+                          Scoate
+                        </button>
+                      </div>
                     )}
                   </div>
 

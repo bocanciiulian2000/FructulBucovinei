@@ -76,11 +76,11 @@ export function CtaSection() {
                 <span>+40 764 417 635</span>
               </a>
               <a
-                href="mailto:fructulbucovinei@gmail.com"
+                href="mailto:contact@fructulbucovinei.ro"
                 className="flex items-center gap-4 transition-colors hover:text-burgundy"
               >
                 <Mail size={30} className="shrink-0 fill-brown text-brown" />
-                <span className="break-all">fructulbucovinei@gmail.com</span>
+                <span className="break-all">contact@fructulbucovinei.ro</span>
               </a>
             </div>
 

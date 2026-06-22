@@ -14,12 +14,17 @@ import {
   setCartItemQuantity,
   type CartItem,
 } from '@/lib/cart'
+import { reconcileCartWithInventory } from '@/lib/cart-inventory'
+import {
+  clearAppliedPromoCode,
+  getPromoDiscountAmount,
+  getPromoDiscountPercent,
+  normalizePromoCode,
+  PROMO_UPDATED_EVENT,
+  readAppliedPromoCode,
+  writeAppliedPromoCode,
+} from '@/lib/promotions'
 
-const promoCodes: Record<string, number> = {
-  BUCOVINA10: 10,
-  FRUCTUL10: 10,
-  LIVADA15: 15,
-}
 
 export function CartPageContent() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
@@ -29,7 +34,11 @@ export function CartPageContent() {
   const [couponMessage, setCouponMessage] = useState('')
 
   useEffect(() => {
-    const syncCart = () => setCartItems(readCart())
+    const syncCart = () => {
+      const currentCart = readCart()
+      setCartItems(currentCart)
+      void reconcileCartWithInventory(currentCart).then(setCartItems)
+    }
 
     syncCart()
     window.addEventListener(CART_UPDATED_EVENT, syncCart)
@@ -41,9 +50,27 @@ export function CartPageContent() {
     }
   }, [])
 
+  useEffect(() => {
+    const syncPromoCode = () => {
+      const code = readAppliedPromoCode()
+      setAppliedCoupon(code)
+      setCouponCode(code)
+    }
+
+    syncPromoCode()
+    window.addEventListener(PROMO_UPDATED_EVENT, syncPromoCode)
+    window.addEventListener('storage', syncPromoCode)
+
+    return () => {
+      window.removeEventListener(PROMO_UPDATED_EVENT, syncPromoCode)
+      window.removeEventListener('storage', syncPromoCode)
+    }
+  }, [])
+
   const subtotal = useMemo(() => getCartSubtotal(cartItems), [cartItems])
-  const discountPercent = appliedCoupon ? promoCodes[appliedCoupon] : 0
-  const total = subtotal * (1 - discountPercent / 100)
+  const discountPercent = getPromoDiscountPercent(appliedCoupon)
+  const discountAmount = getPromoDiscountAmount(subtotal, appliedCoupon)
+  const total = subtotal - discountAmount
 
   const updateQuantity = (slug: string, quantity: number) => {
     setCartItems(setCartItemQuantity(slug, quantity))
@@ -54,23 +81,30 @@ export function CartPageContent() {
   }
 
   const applyCoupon = () => {
-    const normalizedCode = couponCode.trim().toUpperCase()
+    const normalizedCode = normalizePromoCode(couponCode)
 
     if (!normalizedCode) {
-      setAppliedCoupon('')
       setCouponMessage('Introdu un cod promoțional.')
       return
     }
 
-    if (!promoCodes[normalizedCode]) {
-      setAppliedCoupon('')
+    const appliedCode = writeAppliedPromoCode(normalizedCode)
+
+    if (!appliedCode) {
       setCouponMessage('Codul promoțional nu este valid.')
       return
     }
 
-    setAppliedCoupon(normalizedCode)
-    setCouponCode(normalizedCode)
-    setCouponMessage(`Reducere de ${promoCodes[normalizedCode]}% aplicată.`)
+    setAppliedCoupon(appliedCode)
+    setCouponCode(appliedCode)
+    setCouponMessage(`Reducere de ${getPromoDiscountPercent(appliedCode)}% aplicată.`)
+  }
+
+  const removeCoupon = () => {
+    clearAppliedPromoCode()
+    setAppliedCoupon('')
+    setCouponCode('')
+    setCouponMessage('Codul promoțional a fost eliminat.')
   }
 
   return (
@@ -239,6 +273,25 @@ export function CartPageContent() {
                 {couponMessage}
               </p>
             )}
+            {appliedCoupon && discountPercent > 0 ? (
+              <div className="mt-3 rounded-2xl border border-forest/10 bg-cream px-4 py-3 text-sm text-forest">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold">
+                    Cod aplicat: <span className="text-burgundy">{appliedCoupon}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={removeCoupon}
+                    className="text-xs font-bold uppercase tracking-wide text-burgundy transition-colors hover:text-forest"
+                  >
+                    Scoate
+                  </button>
+                </div>
+                <p className="mt-1 text-xs font-semibold text-forest/65">
+                  Reducere: -{formatCartPrice(discountAmount)} lei
+                </p>
+              </div>
+            ) : null}
           </div>
 
           <div>

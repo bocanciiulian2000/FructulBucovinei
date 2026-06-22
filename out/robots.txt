@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /594ef50966a9a7aa082155790db7cb95/
+Disallow: /checkout
+Disallow: /cos
+Disallow: /contul-meu
+Disallow: /comenzile-mele
+Disallow: /comanda-primita
+
+Sitemap: https://fructulbucovinei.ro/sitemap.xml

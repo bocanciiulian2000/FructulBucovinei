@@ -3,9 +3,15 @@
 import { useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
 import type { AdoptPackage } from '@/lib/adopt-packages'
-import { addPackageToCart } from '@/lib/cart'
+import { addPackageToCart, type AdoptionDetails } from '@/lib/cart'
 
-export function PackagePurchaseControls({ pkg }: { pkg: AdoptPackage }) {
+type PackagePurchaseControlsProps = {
+  pkg: AdoptPackage
+  formId?: string
+  isOutOfStock?: boolean
+}
+
+export function PackagePurchaseControls({ pkg, formId, isOutOfStock = false }: PackagePurchaseControlsProps) {
   const [quantity, setQuantity] = useState(1)
   const [wasAdded, setWasAdded] = useState(false)
 
@@ -17,14 +23,53 @@ export function PackagePurchaseControls({ pkg }: { pkg: AdoptPackage }) {
     setQuantity((currentQuantity) => currentQuantity + 1)
   }
 
+  const getAdoptionDetails = (): AdoptionDetails | null | undefined => {
+    if (!formId) {
+      return undefined
+    }
+
+    const form = document.getElementById(formId) as HTMLFormElement | null
+
+    if (!form) {
+      return undefined
+    }
+
+    if (!form.checkValidity()) {
+      form.reportValidity()
+      return null
+    }
+
+    const formData = new FormData(form)
+    const treePurpose = String(formData.get('tree-purpose') ?? '')
+
+    return {
+      certificateName: String(formData.get('certificate-name') ?? '').trim(),
+      treeName: String(formData.get('tree-name') ?? '').trim(),
+      treePurpose,
+      treePurposeOther: String(formData.get('tree-purpose-other') ?? '').trim() || undefined,
+      treeMessage: String(formData.get('tree-message') ?? '').trim(),
+    }
+  }
+
   const handleAddToCart = () => {
-    addPackageToCart(pkg, quantity)
+    if (isOutOfStock) {
+      return
+    }
+
+    const adoptionDetails = getAdoptionDetails()
+
+    if (adoptionDetails === null) {
+      return
+    }
+
+    addPackageToCart(pkg, quantity, adoptionDetails)
     setWasAdded(true)
     window.setTimeout(() => setWasAdded(false), 1800)
   }
 
   return (
-    <div className="grid gap-4 pt-2 sm:grid-cols-[8rem_1fr]">
+    <div className={isOutOfStock ? 'grid gap-4 pt-2' : 'grid gap-4 pt-2 sm:grid-cols-[8rem_1fr]'}>
+      {!isOutOfStock ? (
       <div className="grid h-14 grid-cols-3 overflow-hidden rounded-xl border border-brown/45 bg-cream text-forest">
         <button
           type="button"
@@ -46,13 +91,15 @@ export function PackagePurchaseControls({ pkg }: { pkg: AdoptPackage }) {
           <Plus size={16} />
         </button>
       </div>
+      ) : null}
 
       <button
         type="button"
         onClick={handleAddToCart}
-        className="h-14 rounded-xl bg-burgundy px-6 text-sm font-bold text-cream transition-colors hover:bg-forest md:text-base"
+        disabled={isOutOfStock}
+        className="h-14 rounded-xl bg-burgundy px-6 text-sm font-bold text-cream transition-colors hover:bg-forest disabled:cursor-not-allowed disabled:bg-forest/35 disabled:text-cream/80 md:text-base"
       >
-        {wasAdded ? 'Adăugat în coș' : 'Adaugă în coș'}
+        {isOutOfStock ? 'Produsul nu este pe stoc' : wasAdded ? 'Adăugat în coș' : 'Adaugă în coș'}
       </button>
     </div>
   )

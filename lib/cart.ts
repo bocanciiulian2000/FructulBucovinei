@@ -3,6 +3,14 @@ import type { AdoptPackage } from '@/lib/adopt-packages'
 export const CART_STORAGE_KEY = 'fructul-bucovinei-cart'
 export const CART_UPDATED_EVENT = 'fructul-bucovinei-cart-updated'
 
+export type AdoptionDetails = {
+  certificateName: string
+  treeName: string
+  treePurpose: string
+  treePurposeOther?: string
+  treeMessage: string
+}
+
 export type CartItem = {
   id: number
   slug: string
@@ -10,6 +18,7 @@ export type CartItem = {
   price: string
   image: string
   quantity: number
+  adoptionDetails?: AdoptionDetails
 }
 
 export function readCart(): CartItem[] {
@@ -34,10 +43,17 @@ export function writeCart(cart: CartItem[]) {
   window.dispatchEvent(new CustomEvent(CART_UPDATED_EVENT, { detail: cart }))
 }
 
-export function addPackageToCart(pkg: AdoptPackage, quantity = 1) {
+export function addPackageToCart(
+  pkg: AdoptPackage,
+  quantity = 1,
+  adoptionDetails?: AdoptionDetails
+) {
   const cart = readCart()
-  const existingItem = cart.find((item) => item.slug === pkg.slug)
   const normalizedQuantity = Math.max(1, Math.floor(quantity) || 1)
+  const itemSlug = adoptionDetails ? `${pkg.slug}-${Date.now()}` : pkg.slug
+  const existingItem = adoptionDetails
+    ? undefined
+    : cart.find((item) => item.slug === pkg.slug)
 
   const nextCart = existingItem
     ? cart.map((item) =>
@@ -49,11 +65,12 @@ export function addPackageToCart(pkg: AdoptPackage, quantity = 1) {
         ...cart,
         {
           id: pkg.id,
-          slug: pkg.slug,
+          slug: itemSlug,
           name: pkg.name,
           price: pkg.price,
           image: pkg.image,
           quantity: normalizedQuantity,
+          adoptionDetails,
         },
       ]
 
@@ -106,4 +123,9 @@ export function getCartSubtotal(cart: CartItem[]) {
     (total, item) => total + parseCartPrice(item.price) * item.quantity,
     0
   )
+}
+
+
+export function getCartBaseSlug(slug: string) {
+  return String(slug || '').replace(/-\d{8,}$/, '')
 }

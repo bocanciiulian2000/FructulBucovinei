@@ -1,0 +1,1 @@
+export const ADMIN_DASHBOARD_PATH = '/594ef50966a9a7aa082155790db7cb95'

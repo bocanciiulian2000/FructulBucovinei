@@ -10,6 +10,7 @@ export type LocalDemoUser = {
   firstName: string
   lastName: string
   email: string
+  role?: 'customer' | 'admin'
 }
 
 const DEFAULT_LOCAL_DEMO_USER: LocalDemoUser = {
@@ -17,6 +18,7 @@ const DEFAULT_LOCAL_DEMO_USER: LocalDemoUser = {
   firstName: 'Cont',
   lastName: 'Demo',
   email: LOCAL_DEMO_EMAIL,
+  role: 'admin',
 }
 
 export function isLocalDemoHost() {
@@ -49,7 +51,14 @@ export function getLocalDemoUser() {
       return null
     }
 
-    return parsedUser
+    const upgradedUser: LocalDemoUser = {
+      ...DEFAULT_LOCAL_DEMO_USER,
+      ...parsedUser,
+      role: 'admin',
+    }
+
+    saveLocalDemoUser(upgradedUser)
+    return upgradedUser
   } catch {
     window.localStorage.removeItem(LOCAL_DEMO_STORAGE_KEY)
     return null

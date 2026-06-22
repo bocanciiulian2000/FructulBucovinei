@@ -1,6 +1,13 @@
 const crypto = require('crypto')
 const { URL } = require('url')
 const mysql = require('mysql2/promise')
+const nodemailer = require('nodemailer')
+const QRCode = require('qrcode')
+const {
+  generateSecret: generateTotpSecret,
+  generateURI: generateTotpUri,
+  verify: verifyTotpToken,
+} = require('otplib')
 
 let httpModule
 let usingUnitHttp = false
@@ -14,8 +21,26 @@ try {
 
 const AUTH_COOKIE_NAME = 'fructul-bucovinei-session'
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30
+const TWO_FACTOR_CHALLENGE_TTL_SECONDS = 60 * 5
+const EMAIL_VERIFICATION_TTL_MINUTES = 30
+const PASSWORD_RESET_TTL_MINUTES = 30
 
 let dbClient = null
+let mailTransporter = null
+const rateLimitBuckets = new Map()
+
+const RATE_LIMIT_RULES = [
+  { method: 'POST', path: '/api/auth/register', limit: 3, windowMs: 60 * 60 * 1000 },
+  { method: 'POST', path: '/api/auth/login', limit: 8, windowMs: 15 * 60 * 1000 },
+  { method: 'POST', path: '/api/auth/login/2fa', limit: 8, windowMs: 15 * 60 * 1000 },
+  { method: 'POST', path: '/api/auth/forgot-password', limit: 3, windowMs: 30 * 60 * 1000 },
+  { method: 'POST', path: '/api/auth/reset-password', limit: 6, windowMs: 30 * 60 * 1000 },
+  { method: 'POST', path: '/api/auth/verify-email', limit: 10, windowMs: 30 * 60 * 1000 },
+  { method: 'POST', path: '/api/auth/2fa/setup', limit: 5, windowMs: 60 * 60 * 1000 },
+  { method: 'POST', path: '/api/auth/2fa/verify', limit: 8, windowMs: 15 * 60 * 1000 },
+  { method: 'POST', path: '/api/auth/2fa/disable', limit: 5, windowMs: 60 * 60 * 1000 },
+  { method: 'POST', path: '/api/orders', limit: 12, windowMs: 60 * 60 * 1000 },
+]
 
 function requiredEnv(name) {
   const value = process.env[name]
@@ -43,12 +68,606 @@ function getDbClient() {
   return dbClient
 }
 
+function getFirstConfiguredUrl(...values) {
+  for (const value of values) {
+    const firstValue = String(value || '').split(',')[0].trim()
+
+    if (firstValue) {
+      return firstValue.replace(/\/$/, '')
+    }
+  }
+
+  return ''
+}
+
+function getSiteBaseUrl() {
+  return getFirstConfiguredUrl(
+    process.env.PUBLIC_SITE_URL,
+    process.env.SITE_URL,
+    process.env.FRONTEND_ORIGIN,
+    process.env.FRONTEND_ORIGINS,
+    'https://fructulbucovinei.ro'
+  )
+}
+
+function getClientIp(request) {
+  const forwardedFor = String(request.headers['x-forwarded-for'] || '')
+    .split(',')[0]
+    .trim()
+  const realIp = String(request.headers['x-real-ip'] || '').trim()
+  const cfIp = String(request.headers['cf-connecting-ip'] || '').trim()
+
+  return forwardedFor || cfIp || realIp || request.socket?.remoteAddress || 'unknown'
+}
+
+function findRateLimitRule(method, routePath) {
+  return RATE_LIMIT_RULES.find((rule) => (
+    rule.method === method &&
+    (typeof rule.path === 'string' ? rule.path === routePath : rule.path.test(routePath))
+  ))
+}
+
+function cleanupRateLimitBuckets(now) {
+  if (rateLimitBuckets.size < 500) {
+    return
+  }
+
+  for (const [key, bucket] of rateLimitBuckets.entries()) {
+    if (bucket.resetAt <= now) {
+      rateLimitBuckets.delete(key)
+    }
+  }
+}
+
+function checkRateLimit(request, response, routePath) {
+  const rule = findRateLimitRule(request.method, routePath)
+
+  if (!rule) {
+    return true
+  }
+
+  const now = Date.now()
+  cleanupRateLimitBuckets(now)
+
+  const ip = getClientIp(request)
+  const key = `${rule.method}:${rule.path}:${ip}`
+  const currentBucket = rateLimitBuckets.get(key)
+  const bucket = currentBucket && currentBucket.resetAt > now
+    ? currentBucket
+    : { count: 0, resetAt: now + rule.windowMs }
+
+  bucket.count += 1
+  rateLimitBuckets.set(key, bucket)
+
+  if (bucket.count <= rule.limit) {
+    return true
+  }
+
+  const retryAfterSeconds = Math.max(1, Math.ceil((bucket.resetAt - now) / 1000))
+
+  sendJson(
+    response,
+    request,
+    429,
+    { error: 'Prea multe încercări. Te rugăm să încerci din nou puțin mai târziu.' },
+    { 'Retry-After': String(retryAfterSeconds) }
+  )
+  return false
+}
+
+function hashVerificationToken(token) {
+  return crypto.createHash('sha256').update(String(token || '')).digest('hex')
+}
+
+function createEmailVerificationToken() {
+  return crypto.randomBytes(32).toString('base64url')
+}
+
+function createPasswordResetToken() {
+  return crypto.randomBytes(32).toString('base64url')
+}
+
+async function deleteExpiredUnverifiedUsers(db = getDbClient()) {
+  await db.execute(
+    `DELETE FROM users
+     WHERE email_verified_at IS NULL
+       AND email_verification_expires_at IS NOT NULL
+       AND email_verification_expires_at < NOW()`
+  )
+}
+
+async function clearExpiredPasswordResetTokens(db = getDbClient()) {
+  await db.execute(
+    `UPDATE users
+     SET password_reset_token_hash = NULL,
+         password_reset_expires_at = NULL,
+         password_reset_sent_at = NULL,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE password_reset_expires_at IS NOT NULL
+       AND password_reset_expires_at < NOW()`
+  )
+}
+
+function getMailTransporter() {
+  if (mailTransporter) {
+    return mailTransporter
+  }
+
+  const host = process.env.SMTP_HOST
+  const port = Number(process.env.SMTP_PORT || 587)
+  const user = process.env.SMTP_USER
+  const pass = process.env.SMTP_PASSWORD
+
+  if (!host || !user || !pass) {
+    throw new Error('Missing SMTP configuration.')
+  }
+
+  mailTransporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: {
+      user,
+      pass,
+    },
+  })
+
+  return mailTransporter
+}
+
+function getTransactionalEmailFooterText(note) {
+  return [
+    note,
+    '',
+    'Acesta este un mesaj tranzacțional/administrativ, transmis pentru gestionarea și securitatea contului tău. Nu este comunicare comercială.',
+    'Operator date: FRUCTUL BUCOVINEI SRL, Sat Rădășeni, Str. Părului 1, județul Suceava, CUI 38785393.',
+    'Prelucrăm datele tale strict pentru gestionarea contului, procesarea comenzii, livrare, facturare, suport și îndeplinirea obligațiilor legale.',
+    'Ai drept de acces, rectificare, ștergere, restricționare, portabilitate, opoziție și dreptul de a depune o plângere la autoritatea de supraveghere, în condițiile GDPR.',
+    `Politica de confidențialitate: ${getSiteBaseUrl()}/politica-de-confidentialitate`,
+    'Contact pentru date personale: contact@fructulbucovinei.ro.',
+  ]
+}
+
+function formatMoney(value, currency = 'RON') {
+  return new Intl.NumberFormat('ro-RO', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0))
+}
+
+function getPaymentMethodLabel(paymentMethod) {
+  return paymentMethod === 'card' ? 'Plată online cu cardul' : 'Numerar la livrare'
+}
+
+function getPaymentStatusLabel(paymentStatus) {
+  if (paymentStatus === 'paid') {
+    return 'Plătită'
+  }
+
+  if (paymentStatus === 'failed') {
+    return 'Eșuată'
+  }
+
+  return 'În așteptare'
+}
+
+function getOrderAddress(order, type = 'shipping') {
+  return (order.addresses || []).find((address) => address.type === type) || null
+}
+
+function formatAddressLines(address) {
+  if (!address) {
+    return []
+  }
+
+  return [
+    `${address.firstName || ''} ${address.lastName || ''}`.trim(),
+    address.company,
+    address.streetAddress,
+    address.addressExtra,
+    [address.city, address.county, address.postalCode].filter(Boolean).join(', '),
+    address.country,
+    address.phone ? `Telefon: ${address.phone}` : '',
+  ].filter(Boolean)
+}
+
+function getAdoptionDetailsLines(snapshot) {
+  const details = snapshot?.adoptionDetails
+
+  if (!details) {
+    return []
+  }
+
+  const purpose = details.treePurpose === 'other'
+    ? details.treePurposeOther
+    : details.treePurpose
+
+  return [
+    details.certificateName ? `Nume certificat: ${details.certificateName}` : '',
+    details.treeName ? `Numele pomului: ${details.treeName}` : '',
+    purpose ? `Scop adopție: ${purpose}` : '',
+    details.treeMessage ? `Mesaj pentru pom: ${details.treeMessage}` : '',
+  ].filter(Boolean)
+}
+
+function renderInfoRows(rows) {
+  return rows
+    .map((row) => `
+      <tr>
+        <td style="padding: 10px 0; color:#7a5c46; font-family: Arial, sans-serif; font-size: 13px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;">
+          ${row.label}
+        </td>
+        <td align="right" style="padding: 10px 0; color:#244235; font-family: Arial, sans-serif; font-size: 14px; font-weight:700;">
+          ${row.value}
+        </td>
+      </tr>
+    `)
+    .join('')
+}
+
+function renderOrderItemsHtml(order) {
+  return (order.items || [])
+    .map((item) => {
+      const snapshot = item.productSnapshot || {}
+      const details = getAdoptionDetailsLines(snapshot)
+      const detailsHtml = details.length
+        ? `<ul style="margin: 10px 0 0; padding-left: 18px; color:#7a5c46; font-family: Arial, sans-serif; font-size: 13px; line-height:1.55;">
+            ${details.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+          </ul>`
+        : ''
+
+      return `
+        <tr>
+          <td style="padding: 16px 0; border-top:1px solid #e6dac9;">
+            <div style="font-family: Arial, sans-serif; color:#244235; font-size: 15px; font-weight:700;">
+              ${escapeHtml(item.productName)}
+            </div>
+            <div style="margin-top: 6px; font-family: Arial, sans-serif; color:#7a5c46; font-size: 13px;">
+              Cantitate: ${item.quantity} × ${formatMoney(item.unitPrice, order.currency)}
+            </div>
+            ${detailsHtml}
+          </td>
+          <td align="right" style="padding: 16px 0; border-top:1px solid #e6dac9; font-family: Arial, sans-serif; color:#244235; font-size: 14px; font-weight:700; white-space:nowrap;">
+            ${formatMoney(item.lineTotal, order.currency)}
+          </td>
+        </tr>
+      `
+    })
+    .join('')
+}
+
+function renderOrderItemsText(order) {
+  return (order.items || []).flatMap((item) => {
+    const lines = [
+      `- ${item.productName}`,
+      `  Cantitate: ${item.quantity} x ${formatMoney(item.unitPrice, order.currency)}`,
+      `  Subtotal produs: ${formatMoney(item.lineTotal, order.currency)}`,
+    ]
+    const details = getAdoptionDetailsLines(item.productSnapshot || {})
+
+    for (const detail of details) {
+      lines.push(`  ${detail}`)
+    }
+
+    return lines
+  })
+}
+
+function renderTransactionalEmail({
+  eyebrow,
+  title,
+  greeting,
+  intro,
+  contentHtml,
+  buttonText,
+  actionUrl,
+  note,
+}) {
+  const privacyUrl = `${getSiteBaseUrl()}/politica-de-confidentialitate`
+  const buttonHtml = buttonText && actionUrl
+    ? `
+      <div style="padding: 18px 0 22px;">
+        <a href="${actionUrl}" style="display:inline-block; background:#8d0b1f; color:#ffffff; padding: 13px 22px; border-radius: 6px; text-decoration:none; font-family: Arial, sans-serif; font-size: 13px; letter-spacing:.04em; text-transform:uppercase; font-weight: 700;">
+          ${buttonText}
+        </a>
+      </div>
+    `
+    : ''
+
+  return `
+    <div style="margin:0; padding:0; background:#ffffff;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#ffffff; padding: 24px 12px;">
+        <tr>
+          <td align="center">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 680px; background:#ffffff; border:1px solid #e6dac9;">
+              <tr>
+                <td style="padding: 30px 32px 22px; border-bottom:4px solid #8d0b1f;">
+                  <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 25px; font-weight:700; color:#244235;">
+                    Fructul Bucovinei
+                  </div>
+                  <div style="margin-top: 12px; font-family: Arial, sans-serif; font-size: 11px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:#7a5c46;">
+                    ${eyebrow}
+                  </div>
+                  <h1 style="margin: 12px 0 0; font-family: Georgia, 'Times New Roman', serif; color:#244235; font-size: 34px; line-height:1.08;">
+                    ${title}
+                  </h1>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 28px 32px 32px;">
+                  <p style="margin: 0 0 14px; color:#244235; font-family: Arial, sans-serif; font-size:16px; line-height:1.65;">
+                    ${greeting}
+                  </p>
+                  <p style="margin: 0 0 22px; color:#244235; font-family: Arial, sans-serif; font-size:16px; line-height:1.65;">
+                    ${intro}
+                  </p>
+                  ${contentHtml}
+                  ${buttonHtml}
+                  ${actionUrl ? `
+                    <p style="margin: 0 0 10px; color:#7a5c46; font-family: Arial, sans-serif; font-size: 13px; line-height:1.55;">
+                      Dacă butonul nu funcționează, copiază linkul de mai jos în browser:
+                    </p>
+                    <p style="margin: 0; word-break: break-all; color:#244235; font-family: Arial, sans-serif; font-size: 13px; line-height:1.55;">
+                      ${actionUrl}
+                    </p>
+                  ` : ''}
+                  <div style="margin-top: 28px; padding-top: 18px; border-top:1px solid #e6dac9;">
+                    <p style="margin:0 0 12px; color:#7a5c46; font-family: Arial, sans-serif; font-size: 13px; line-height:1.55;">
+                      ${note}
+                    </p>
+                    <p style="margin:0 0 10px; color:#7a5c46; font-family: Arial, sans-serif; font-size: 12px; line-height:1.55;">
+                      Acesta este un mesaj tranzacțional/administrativ, transmis pentru gestionarea comenzii sau a contului tău. Nu este comunicare comercială.
+                    </p>
+                    <p style="margin:0 0 10px; color:#7a5c46; font-family: Arial, sans-serif; font-size: 12px; line-height:1.55;">
+                      Operator date: FRUCTUL BUCOVINEI SRL, Sat Rădășeni, Str. Părului 1, județul Suceava, CUI 38785393.
+                    </p>
+                    <p style="margin:0 0 10px; color:#7a5c46; font-family: Arial, sans-serif; font-size: 12px; line-height:1.55;">
+                      Prelucrăm datele tale strict pentru gestionarea contului, procesarea comenzii, livrare, facturare, suport și obligații legale. Ai drept de acces, rectificare, ștergere, restricționare, portabilitate, opoziție și dreptul de a depune o plângere la autoritatea de supraveghere, în condițiile GDPR.
+                    </p>
+                    <p style="margin:0; color:#7a5c46; font-family: Arial, sans-serif; font-size: 12px; line-height:1.55;">
+                      Detalii: <a href="${privacyUrl}" style="color:#8d0b1f; text-decoration:underline;">Politica de confidențialitate</a>. Contact: contact@fructulbucovinei.ro.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+  `
+}
+
+async function sendEmailVerificationMessage({ email, firstName, token }) {
+  const siteBaseUrl = getSiteBaseUrl()
+  const verificationUrl = `${siteBaseUrl}/confirmare-email?token=${encodeURIComponent(token)}`
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER
+  const brandName = 'Fructul Bucovinei'
+  const note = 'Dacă nu ai creat tu acest cont, poți ignora acest mesaj.'
+
+  await getMailTransporter().sendMail({
+    from,
+    to: email,
+    subject: 'Confirmă adresa de email - Fructul Bucovinei',
+    text: [
+      `Bună, ${firstName || ''}`.trim() + ',',
+      '',
+      'Îți mulțumim că ți-ai creat cont la Fructul Bucovinei.',
+      'Pentru a activa contul, confirmă adresa de email accesând linkul de mai jos:',
+      verificationUrl,
+      '',
+      `Linkul este valabil ${EMAIL_VERIFICATION_TTL_MINUTES} de minute.`,
+      '',
+      ...getTransactionalEmailFooterText(note),
+      '',
+      brandName,
+    ].join('\n'),
+    html: renderTransactionalEmail({
+      eyebrow: 'Confirmare cont',
+      title: 'Confirmă adresa de email',
+      greeting: `Bună, ${escapeHtml(firstName || '')},`,
+      intro: `Îți mulțumim că ți-ai creat cont la <strong>Fructul Bucovinei</strong>. Pentru a activa contul, apasă pe butonul de mai jos. Linkul este valabil ${EMAIL_VERIFICATION_TTL_MINUTES} de minute.`,
+      contentHtml: '',
+      buttonText: 'Confirmă emailul',
+      actionUrl: verificationUrl,
+      note,
+    }),
+  })
+}
+
+async function sendPasswordResetMessage({ email, firstName, token }) {
+  const siteBaseUrl = getSiteBaseUrl()
+  const resetUrl = `${siteBaseUrl}/resetare-parola?token=${encodeURIComponent(token)}`
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER
+  const brandName = 'Fructul Bucovinei'
+  const note = 'Dacă nu ai cerut tu resetarea parolei, poți ignora acest mesaj.'
+
+  await getMailTransporter().sendMail({
+    from,
+    to: email,
+    subject: 'Resetare parolă - Fructul Bucovinei',
+    text: [
+      `Bună, ${firstName || ''}`.trim() + ',',
+      '',
+      'Am primit o solicitare pentru resetarea parolei contului tău Fructul Bucovinei.',
+      'Pentru a seta o parolă nouă, accesează linkul de mai jos:',
+      resetUrl,
+      '',
+      `Linkul este valabil ${PASSWORD_RESET_TTL_MINUTES} de minute.`,
+      '',
+      ...getTransactionalEmailFooterText(note),
+      '',
+      brandName,
+    ].join('\n'),
+    html: renderTransactionalEmail({
+      eyebrow: 'Securitatea contului',
+      title: 'Resetează parola',
+      greeting: `Bună, ${escapeHtml(firstName || '')},`,
+      intro: `Am primit o solicitare pentru resetarea parolei contului tău <strong>Fructul Bucovinei</strong>. Pentru a seta o parolă nouă, apasă pe butonul de mai jos. Linkul este valabil ${PASSWORD_RESET_TTL_MINUTES} de minute.`,
+      contentHtml: '',
+      buttonText: 'Resetează parola',
+      actionUrl: resetUrl,
+      note,
+    }),
+  })
+}
+
+async function sendOrderConfirmationMessage(order) {
+  if (!order?.customerEmail) {
+    return
+  }
+
+  const shippingAddress = getOrderAddress(order, 'shipping')
+  const shippingLines = formatAddressLines(shippingAddress)
+  const note = 'Primești acest email deoarece ai plasat o comandă pe site-ul Fructul Bucovinei.'
+  const contentHtml = `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 22px;">
+      ${renderInfoRows([
+        { label: 'Număr comandă', value: `#${escapeHtml(order.orderNumber)}` },
+        { label: 'Metodă de plată', value: escapeHtml(getPaymentMethodLabel(order.paymentMethod)) },
+        { label: 'Status plată', value: escapeHtml(getPaymentStatusLabel(order.paymentStatus)) },
+      ])}
+    </table>
+
+    <h2 style="margin: 26px 0 8px; font-family: Georgia, 'Times New Roman', serif; color:#244235; font-size: 24px;">
+      Produse comandate
+    </h2>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      ${renderOrderItemsHtml(order)}
+    </table>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 18px 0 24px; border-top:2px solid #244235;">
+      ${renderInfoRows([
+        { label: 'Subtotal', value: formatMoney(order.subtotalAmount, order.currency) },
+        ...(Number(order.discountAmount || 0) > 0
+          ? [{ label: `Reducere ${escapeHtml(order.discountCode || '')}`, value: `-${formatMoney(order.discountAmount, order.currency)}` }]
+          : []),
+        { label: 'Livrare', value: formatMoney(order.shippingAmount, order.currency) },
+        { label: 'Total', value: formatMoney(order.totalAmount, order.currency) },
+      ])}
+    </table>
+
+    <h2 style="margin: 26px 0 10px; font-family: Georgia, 'Times New Roman', serif; color:#244235; font-size: 24px;">
+      Adresa de livrare
+    </h2>
+    <p style="margin:0; color:#244235; font-family: Arial, sans-serif; font-size: 15px; line-height:1.7;">
+      ${shippingLines.map(escapeHtml).join('<br>')}
+    </p>
+  `
+
+  await getMailTransporter().sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: order.customerEmail,
+    subject: `Am primit comanda ta #${order.orderNumber} - Fructul Bucovinei`,
+    text: [
+      'Bună,',
+      '',
+      `Îți mulțumim pentru comandă. Am primit comanda ta #${order.orderNumber}.`,
+      '',
+      `Metodă de plată: ${getPaymentMethodLabel(order.paymentMethod)}`,
+      `Total: ${formatMoney(order.totalAmount, order.currency)}`,
+      '',
+      'Produse comandate:',
+      ...renderOrderItemsText(order),
+      '',
+      'Adresa de livrare:',
+      ...shippingLines,
+      '',
+      ...getTransactionalEmailFooterText(note),
+      '',
+      'Fructul Bucovinei',
+    ].join('\n'),
+    html: renderTransactionalEmail({
+      eyebrow: 'Confirmare comandă',
+      title: `Mulțumim pentru comandă`,
+      greeting: 'Bună,',
+      intro: `Am primit comanda ta <strong>#${escapeHtml(order.orderNumber)}</strong>. Mai jos găsești sumarul comenzii și detaliile de livrare.`,
+      contentHtml,
+      note,
+    }),
+  })
+}
+
+async function sendOrderShippedMessage(order) {
+  if (!order?.customerEmail || !order.awb) {
+    return
+  }
+
+  const shippingAddress = getOrderAddress(order, 'shipping')
+  const shippingLines = formatAddressLines(shippingAddress)
+  const note = 'Primești acest email deoarece statusul comenzii tale a fost actualizat.'
+  const contentHtml = `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 22px;">
+      ${renderInfoRows([
+        { label: 'Număr comandă', value: `#${escapeHtml(order.orderNumber)}` },
+        { label: 'AWB', value: escapeHtml(order.awb) },
+        { label: 'Status', value: 'Expediată' },
+      ])}
+    </table>
+
+    <h2 style="margin: 26px 0 8px; font-family: Georgia, 'Times New Roman', serif; color:#244235; font-size: 24px;">
+      Produse expediate
+    </h2>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      ${renderOrderItemsHtml(order)}
+    </table>
+
+    <h2 style="margin: 26px 0 10px; font-family: Georgia, 'Times New Roman', serif; color:#244235; font-size: 24px;">
+      Adresa de livrare
+    </h2>
+    <p style="margin:0; color:#244235; font-family: Arial, sans-serif; font-size: 15px; line-height:1.7;">
+      ${shippingLines.map(escapeHtml).join('<br>')}
+    </p>
+  `
+
+  await getMailTransporter().sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: order.customerEmail,
+    subject: `Comanda #${order.orderNumber} a fost expediată - Fructul Bucovinei`,
+    text: [
+      'Bună,',
+      '',
+      `Comanda ta #${order.orderNumber} a fost expediată.`,
+      `AWB: ${order.awb}`,
+      '',
+      'Produse expediate:',
+      ...renderOrderItemsText(order),
+      '',
+      'Adresa de livrare:',
+      ...shippingLines,
+      '',
+      ...getTransactionalEmailFooterText(note),
+      '',
+      'Fructul Bucovinei',
+    ].join('\n'),
+    html: renderTransactionalEmail({
+      eyebrow: 'Comandă expediată',
+      title: 'Comanda ta a fost expediată',
+      greeting: 'Bună,',
+      intro: `Comanda <strong>#${escapeHtml(order.orderNumber)}</strong> a fost predată către curier. AWB-ul comenzii este <strong>${escapeHtml(order.awb)}</strong>.`,
+      contentHtml,
+      note,
+    }),
+  })
+}
+
 function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase()
 }
 
 function normalizeName(name) {
   return String(name || '').trim().replace(/\s+/g, ' ')
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
 }
 
 function toBase64Url(value) {
@@ -116,6 +735,21 @@ function createSessionToken(payload) {
   return `${serializedPayload}.${signature}`
 }
 
+function createTwoFactorChallengeToken(payload) {
+  const fullPayload = {
+    ...payload,
+    purpose: 'two-factor-login',
+    exp: Math.floor(Date.now() / 1000) + TWO_FACTOR_CHALLENGE_TTL_SECONDS,
+  }
+  const serializedPayload = toBase64Url(JSON.stringify(fullPayload))
+  const signature = crypto
+    .createHmac('sha256', requiredEnv('AUTH_SECRET'))
+    .update(serializedPayload)
+    .digest('base64url')
+
+  return `${serializedPayload}.${signature}`
+}
+
 function verifySessionToken(token) {
   const [serializedPayload, signature] = String(token || '').split('.')
 
@@ -148,6 +782,16 @@ function verifySessionToken(token) {
   }
 }
 
+function verifyTwoFactorChallengeToken(token) {
+  const payload = verifySessionToken(token)
+
+  if (!payload || payload.purpose !== 'two-factor-login') {
+    return null
+  }
+
+  return payload
+}
+
 function parseCookies(cookieHeader = '') {
   return cookieHeader.split(';').reduce((cookies, part) => {
     const [name, ...rest] = part.trim().split('=')
@@ -177,7 +821,7 @@ async function getSessionUser(request) {
 
   const db = getDbClient()
   const [rows] = await db.execute(
-    `SELECT id, first_name, last_name, email, password_hash
+    `SELECT id, first_name, last_name, email, password_hash, role, two_factor_enabled
      FROM users
      WHERE id = ?
      LIMIT 1`,
@@ -193,6 +837,192 @@ function buildUserResponse(user) {
     firstName: user.first_name,
     lastName: user.last_name,
     email: user.email,
+    role: user.role,
+    twoFactorEnabled: Boolean(Number(user.two_factor_enabled || 0)),
+  }
+}
+
+async function requireAdminUser(request, response) {
+  const currentUser = await getSessionUser(request)
+
+  if (!currentUser) {
+    sendError(response, request, 401, 'Trebuie să fii autentificat.')
+    return null
+  }
+
+  if (currentUser.role !== 'admin') {
+    sendError(response, request, 403, 'Nu ai acces la această zonă.')
+    return null
+  }
+
+  return currentUser
+}
+
+function buildProductResponse(product) {
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    description: product.description,
+    image: product.image,
+    price: Number(product.price),
+    stockQuantity: Number(product.stock_quantity),
+    status: product.status,
+    createdAt: product.created_at,
+    updatedAt: product.updated_at,
+  }
+}
+
+function parseAmount(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  const normalizedValue = String(value || '')
+    .replace(/[^\d,.-]/g, '')
+    .replace('.', '')
+    .replace(',', '.')
+
+  return Number.parseFloat(normalizedValue) || 0
+}
+
+function normalizeOrderNumber(value) {
+  return String(value || '').trim().replace(/^#/, '').toUpperCase()
+}
+
+const PROMO_CODES = {}
+
+function getPromoDiscountPercent(code) {
+  return PROMO_CODES[String(code || '').trim().toUpperCase()] || 0
+}
+
+function normalizeProductSlug(slug) {
+  return String(slug || '').trim().replace(/-\d{8,}$/, '')
+}
+
+function getRequiredString(value) {
+  return String(value || '').trim()
+}
+
+function isValidPhoneNumber(value) {
+  const phone = getRequiredString(value)
+  const digitCount = phone.replace(/\D/g, '').length
+
+  return digitCount >= 7 && digitCount <= 15 && /^\+?[0-9\s().-]+$/.test(phone)
+}
+
+function isValidPostalCode(value) {
+  return /^[0-9]{4,10}$/.test(getRequiredString(value))
+}
+
+function normalizeAddress(address = {}) {
+  return {
+    firstName: normalizeName(address.firstName),
+    lastName: normalizeName(address.lastName),
+    company: normalizeName(address.company),
+    country: getRequiredString(address.country) || 'România',
+    phone: getRequiredString(address.phone),
+    streetAddress: getRequiredString(address.streetAddress),
+    addressExtra: getRequiredString(address.addressExtra),
+    county: getRequiredString(address.county),
+    city: getRequiredString(address.city),
+    postalCode: getRequiredString(address.postalCode),
+  }
+}
+
+function validateAddress(address) {
+  return Boolean(
+    address.firstName &&
+    address.lastName &&
+    address.country &&
+    isValidPhoneNumber(address.phone) &&
+    address.streetAddress &&
+    address.county &&
+    address.city &&
+    isValidPostalCode(address.postalCode)
+  )
+}
+
+function buildOrderNumber(orderId) {
+  return `FB${String(orderId).padStart(6, '0')}`
+}
+
+function mapOrderStatus(status) {
+  const labels = {
+    pending: 'Comandă primită',
+    confirmed: 'Confirmată',
+    processing: 'În procesare',
+    shipped: 'Expediată',
+    completed: 'Finalizată',
+    cancelled: 'Anulată',
+    refunded: 'Rambursată',
+  }
+
+  return labels[status] || status
+}
+
+function parseSnapshot(snapshot) {
+  if (!snapshot) {
+    return null
+  }
+
+  if (typeof snapshot === 'object') {
+    return snapshot
+  }
+
+  try {
+    return JSON.parse(snapshot)
+  } catch {
+    return null
+  }
+}
+
+function buildOrderResponse(order, items = [], addresses = []) {
+  return {
+    id: order.id,
+    orderNumber: order.order_number,
+    userId: order.user_id,
+    customerEmail: order.customer_email,
+    status: order.status,
+    statusLabel: mapOrderStatus(order.status),
+    awb: order.awb || null,
+    paymentMethod: order.payment_method,
+    paymentStatus: order.payment_status,
+    currency: order.currency,
+    subtotalAmount: Number(order.subtotal_amount),
+    discountCode: order.discount_code,
+    discountPercent: Number(order.discount_percent),
+    discountAmount: Number(order.discount_amount),
+    shippingAmount: Number(order.shipping_amount),
+    totalAmount: Number(order.total_amount),
+    customerNote: order.customer_note,
+    createdAt: order.created_at,
+    updatedAt: order.updated_at,
+    items: items.map((item) => ({
+      id: item.id,
+      productId: item.product_id,
+      productSlug: item.product_slug,
+      productName: item.product_name,
+      productImage: item.product_image,
+      unitPrice: Number(item.unit_price),
+      quantity: item.quantity,
+      lineTotal: Number(item.line_total),
+      productSnapshot: parseSnapshot(item.product_snapshot),
+    })),
+    addresses: addresses.map((address) => ({
+      id: address.id,
+      type: address.address_type,
+      firstName: address.first_name,
+      lastName: address.last_name,
+      company: address.company,
+      country: address.country,
+      phone: address.phone,
+      streetAddress: address.street_address,
+      addressExtra: address.address_extra,
+      county: address.county,
+      city: address.city,
+      postalCode: address.postal_code,
+    })),
   }
 }
 
@@ -361,43 +1191,149 @@ async function handleRegister(request, response) {
   }
 
   const db = getDbClient()
+  await deleteExpiredUnverifiedUsers(db)
+
   const [existingUsers] = await db.execute(
-    'SELECT id FROM users WHERE email = ? LIMIT 1',
+    'SELECT id, email_verified_at FROM users WHERE email = ? LIMIT 1',
     [email]
   )
+  const existingUser = existingUsers[0]
 
-  if (existingUsers.length > 0) {
+  if (existingUser?.email_verified_at) {
     sendError(response, request, 409, 'Există deja un cont cu această adresă de email.')
     return
   }
 
   const passwordHash = await hashPassword(password)
-  const [result] = await db.execute(
-    `INSERT INTO users (
-      first_name,
-      last_name,
+  const verificationToken = createEmailVerificationToken()
+  const verificationTokenHash = hashVerificationToken(verificationToken)
+  let pendingUserId = existingUser?.id || null
+
+  if (pendingUserId) {
+    await db.execute(
+      `UPDATE users
+       SET first_name = ?,
+           last_name = ?,
+           password_hash = ?,
+           terms_accepted_at = NOW(),
+           email_verification_token_hash = ?,
+           email_verification_expires_at = DATE_ADD(NOW(), INTERVAL ? MINUTE),
+           email_verification_sent_at = NOW(),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [
+        firstName,
+        lastName,
+        passwordHash,
+        verificationTokenHash,
+        EMAIL_VERIFICATION_TTL_MINUTES,
+        pendingUserId,
+      ]
+    )
+  } else {
+    const [result] = await db.execute(
+      `INSERT INTO users (
+        first_name,
+        last_name,
+        email,
+        password_hash,
+        terms_accepted_at,
+        email_verification_token_hash,
+        email_verification_expires_at,
+        email_verification_sent_at
+      ) VALUES (?, ?, ?, ?, NOW(), ?, DATE_ADD(NOW(), INTERVAL ? MINUTE), NOW())`,
+      [
+        firstName,
+        lastName,
+        email,
+        passwordHash,
+        verificationTokenHash,
+        EMAIL_VERIFICATION_TTL_MINUTES,
+      ]
+    )
+    pendingUserId = result.insertId
+  }
+
+  try {
+    await sendEmailVerificationMessage({
       email,
-      password_hash,
-      terms_accepted_at
-    ) VALUES (?, ?, ?, ?, NOW())`,
-    [firstName, lastName, email, passwordHash]
+      firstName,
+      token: verificationToken,
+    })
+  } catch (error) {
+    console.error(error)
+
+    if (pendingUserId) {
+      await db.execute(
+        'DELETE FROM users WHERE id = ? AND email_verified_at IS NULL',
+        [pendingUserId]
+      )
+    }
+
+    sendError(response, request, 500, 'Nu am putut trimite emailul de confirmare. Te rugăm să încerci din nou.')
+    return
+  }
+
+  sendJson(response, request, 201, {
+    message: `Ți-am trimis un email de confirmare. Linkul este valabil ${EMAIL_VERIFICATION_TTL_MINUTES} de minute.`,
+  })
+}
+
+async function handleVerifyEmail(request, response) {
+  let body
+
+  try {
+    body = await parseJsonBody(request)
+  } catch {
+    sendError(response, request, 400, 'Cerere invalidă.')
+    return
+  }
+
+  const token = String(body.token || '').trim()
+
+  if (!token) {
+    sendError(response, request, 400, 'Tokenul de confirmare lipsește.')
+    return
+  }
+
+  const db = getDbClient()
+  await deleteExpiredUnverifiedUsers(db)
+
+  const tokenHash = hashVerificationToken(token)
+  const [rows] = await db.execute(
+    `SELECT id, email_verified_at, email_verification_expires_at
+     FROM users
+     WHERE email_verification_token_hash = ?
+     LIMIT 1`,
+    [tokenHash]
+  )
+  const user = rows[0]
+
+  if (!user) {
+    sendError(response, request, 400, 'Linkul de confirmare este invalid sau a expirat.')
+    return
+  }
+
+  if (user.email_verified_at) {
+    sendJson(response, request, 200, {
+      message: 'Adresa de email este deja confirmată. Te poți autentifica.',
+    })
+    return
+  }
+
+  await db.execute(
+    `UPDATE users
+     SET email_verified_at = NOW(),
+         email_verification_token_hash = NULL,
+         email_verification_expires_at = NULL,
+         email_verification_sent_at = NULL,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [user.id]
   )
 
-  const user = {
-    id: result.insertId,
-    firstName,
-    lastName,
-    email,
-  }
-  const token = createSessionToken({
-    sub: String(user.id),
-    email,
-    firstName,
-    lastName,
-  })
-
-  sendJson(response, request, 201, { user }, {
-    'Set-Cookie': createCookie(token),
+  sendJson(response, request, 200, {
+    message: 'Adresa de email a fost confirmată. Te poți autentifica.',
   })
 }
 
@@ -420,8 +1356,10 @@ async function handleLogin(request, response) {
   }
 
   const db = getDbClient()
+  await deleteExpiredUnverifiedUsers(db)
+
   const [rows] = await db.execute(
-    `SELECT id, first_name, last_name, email, password_hash
+    `SELECT id, first_name, last_name, email, password_hash, role, two_factor_enabled, two_factor_secret, email_verified_at
      FROM users
      WHERE email = ?
      LIMIT 1`,
@@ -441,9 +1379,26 @@ async function handleLogin(request, response) {
     return
   }
 
-  await db.execute('UPDATE users SET last_login_at = NOW() WHERE id = ?', [
-    user.id,
-  ])
+  if (!user.email_verified_at) {
+    sendError(response, request, 403, 'Te rugăm să confirmi adresa de email înainte de autentificare.')
+    return
+  }
+
+  if (Number(user.two_factor_enabled || 0) === 1) {
+    const challengeToken = createTwoFactorChallengeToken({
+      sub: String(user.id),
+      email: user.email,
+    })
+
+    sendJson(response, request, 200, {
+      requiresTwoFactor: true,
+      challengeToken,
+      message: 'Introdu codul din aplicația de autentificare.',
+    })
+    return
+  }
+
+  await db.execute('UPDATE users SET last_login_at = NOW() WHERE id = ?', [user.id])
 
   const responseUser = {
     ...buildUserResponse(user),
@@ -456,6 +1411,197 @@ async function handleLogin(request, response) {
   })
 
   sendJson(response, request, 200, { user: responseUser }, {
+    'Set-Cookie': createCookie(token),
+  })
+}
+
+async function handleForgotPassword(request, response) {
+  let body
+
+  try {
+    body = await parseJsonBody(request)
+  } catch {
+    sendError(response, request, 400, 'Cerere invalidă.')
+    return
+  }
+
+  const email = normalizeEmail(body.email)
+  const genericMessage = 'Dacă adresa de email este găsită la noi în sistem, vei primi un link de resetare pe email.'
+
+  if (!email) {
+    sendError(response, request, 400, 'Adresa de email este obligatorie.')
+    return
+  }
+
+  const db = getDbClient()
+  await clearExpiredPasswordResetTokens(db)
+
+  const [rows] = await db.execute(
+    `SELECT id, first_name, email, email_verified_at
+     FROM users
+     WHERE email = ?
+     LIMIT 1`,
+    [email]
+  )
+  const user = rows[0]
+
+  if (!user || !user.email_verified_at) {
+    sendJson(response, request, 200, { message: genericMessage })
+    return
+  }
+
+  const resetToken = createPasswordResetToken()
+  const resetTokenHash = hashVerificationToken(resetToken)
+
+  await db.execute(
+    `UPDATE users
+     SET password_reset_token_hash = ?,
+         password_reset_expires_at = DATE_ADD(NOW(), INTERVAL ? MINUTE),
+         password_reset_sent_at = NOW(),
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [resetTokenHash, PASSWORD_RESET_TTL_MINUTES, user.id]
+  )
+
+  try {
+    await sendPasswordResetMessage({
+      email: user.email,
+      firstName: user.first_name,
+      token: resetToken,
+    })
+  } catch (error) {
+    console.error(error)
+    sendError(response, request, 500, 'Nu am putut trimite emailul de resetare. Te rugăm să încerci din nou.')
+    return
+  }
+
+  sendJson(response, request, 200, { message: genericMessage })
+}
+
+async function handleResetPassword(request, response) {
+  let body
+
+  try {
+    body = await parseJsonBody(request)
+  } catch {
+    sendError(response, request, 400, 'Cerere invalidă.')
+    return
+  }
+
+  const token = String(body.token || '').trim()
+  const password = body.password || ''
+  const passwordConfirm = body.passwordConfirm || ''
+
+  if (!token || !password || !passwordConfirm) {
+    sendError(response, request, 400, 'Toate câmpurile sunt obligatorii.')
+    return
+  }
+
+  if (password !== passwordConfirm) {
+    sendError(response, request, 400, 'Parolele nu coincid.')
+    return
+  }
+
+  if (password.length < 8) {
+    sendError(response, request, 400, 'Parola trebuie să aibă cel puțin 8 caractere.')
+    return
+  }
+
+  const db = getDbClient()
+  await clearExpiredPasswordResetTokens(db)
+
+  const tokenHash = hashVerificationToken(token)
+  const [rows] = await db.execute(
+    `SELECT id, password_hash
+     FROM users
+     WHERE password_reset_token_hash = ?
+       AND password_reset_expires_at IS NOT NULL
+       AND password_reset_expires_at >= NOW()
+     LIMIT 1`,
+    [tokenHash]
+  )
+  const user = rows[0]
+
+  if (!user) {
+    sendError(response, request, 400, 'Linkul de resetare este invalid sau a expirat.')
+    return
+  }
+
+  const isSamePassword = await verifyPassword(password, user.password_hash)
+
+  if (isSamePassword) {
+    sendError(response, request, 400, 'Parola nouă nu poate fi aceeași cu parola actuală.')
+    return
+  }
+
+  const passwordHash = await hashPassword(password)
+
+  await db.execute(
+    `UPDATE users
+     SET password_hash = ?,
+         password_reset_token_hash = NULL,
+         password_reset_expires_at = NULL,
+         password_reset_sent_at = NULL,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [passwordHash, user.id]
+  )
+
+  sendJson(response, request, 200, {
+    message: 'Parola a fost resetată cu succes. Te poți autentifica.',
+  })
+}
+
+async function handleTwoFactorLogin(request, response) {
+  let body
+
+  try {
+    body = await parseJsonBody(request)
+  } catch {
+    sendError(response, request, 400, 'Cerere invalidă.')
+    return
+  }
+
+  const challenge = verifyTwoFactorChallengeToken(body.challengeToken)
+  const code = String(body.code || '').replace(/\D/g, '')
+
+  if (!challenge?.sub || !code) {
+    sendError(response, request, 400, 'Codul de autentificare este obligatoriu.')
+    return
+  }
+
+  const db = getDbClient()
+  const [rows] = await db.execute(
+    `SELECT id, first_name, last_name, email, password_hash, role, two_factor_enabled, two_factor_secret
+     FROM users
+     WHERE id = ?
+     LIMIT 1`,
+    [challenge.sub]
+  )
+  const user = rows[0]
+
+  if (!user || Number(user.two_factor_enabled || 0) !== 1 || !user.two_factor_secret) {
+    sendError(response, request, 401, 'Autentificarea în 2 pași nu este disponibilă pentru acest cont.')
+    return
+  }
+
+  const isCodeValid = await isValidTwoFactorCode(code, user.two_factor_secret)
+
+  if (!isCodeValid) {
+    sendError(response, request, 401, 'Codul de autentificare este incorect.')
+    return
+  }
+
+  await db.execute('UPDATE users SET last_login_at = NOW() WHERE id = ?', [user.id])
+
+  const token = createSessionToken({
+    sub: String(user.id),
+    email: user.email,
+    firstName: user.first_name,
+    lastName: user.last_name,
+  })
+
+  sendJson(response, request, 200, { user: buildUserResponse(user) }, {
     'Set-Cookie': createCookie(token),
   })
 }
@@ -586,7 +1732,7 @@ async function handleAccountUpdate(request, response) {
   )
 
   const [updatedRows] = await db.execute(
-    'SELECT id, first_name, last_name, email FROM users WHERE id = ? LIMIT 1',
+    'SELECT id, first_name, last_name, email, role, two_factor_enabled FROM users WHERE id = ? LIMIT 1',
     [currentUser.id]
   )
   const updatedUser = updatedRows[0]
@@ -613,6 +1759,8 @@ async function handleAccountUpdate(request, response) {
         firstName: updatedUser.first_name,
         lastName: updatedUser.last_name,
         email: updatedUser.email,
+        role: updatedUser.role,
+        twoFactorEnabled: Boolean(Number(updatedUser.two_factor_enabled || 0)),
       },
       message: 'Contul a fost actualizat cu succes.',
     },
@@ -620,6 +1768,690 @@ async function handleAccountUpdate(request, response) {
       'Set-Cookie': createCookie(token),
     }
   )
+}
+
+function normalizeTwoFactorCode(code) {
+  return String(code || '').replace(/\D/g, '').slice(0, 6)
+}
+
+async function isValidTwoFactorCode(code, secret) {
+  if (!code || !secret) {
+    return false
+  }
+
+  const result = await verifyTotpToken({
+    secret,
+    token: code,
+    epochTolerance: 30,
+  })
+
+  return Boolean(result && result.valid)
+}
+
+async function getUserForTwoFactor(userId) {
+  const db = getDbClient()
+  const [rows] = await db.execute(
+    `SELECT id, first_name, last_name, email, password_hash, role, two_factor_enabled, two_factor_secret, two_factor_pending_secret
+     FROM users
+     WHERE id = ?
+     LIMIT 1`,
+    [userId]
+  )
+
+  return rows[0] ?? null
+}
+
+async function requirePasswordForUser(response, request, user, password) {
+  if (!password) {
+    sendError(response, request, 400, 'Parola actuală este obligatorie.')
+    return false
+  }
+
+  const isPasswordValid = await verifyPassword(password, user.password_hash)
+
+  if (!isPasswordValid) {
+    sendError(response, request, 401, 'Parola actuală este incorectă.')
+    return false
+  }
+
+  return true
+}
+
+async function handleTwoFactorSetup(request, response) {
+  let body
+
+  try {
+    body = await parseJsonBody(request)
+  } catch {
+    sendError(response, request, 400, 'Cerere invalidă.')
+    return
+  }
+
+  const currentUser = await getSessionUser(request)
+
+  if (!currentUser) {
+    sendError(response, request, 401, 'Nu există o sesiune validă.')
+    return
+  }
+
+  const user = await getUserForTwoFactor(currentUser.id)
+
+  if (!user) {
+    sendError(response, request, 404, 'Contul nu a fost găsit.')
+    return
+  }
+
+  if (Number(user.two_factor_enabled || 0) === 1) {
+    sendError(response, request, 400, 'Autentificarea în 2 pași este deja activă.')
+    return
+  }
+
+  const hasValidPassword = await requirePasswordForUser(response, request, user, body.currentPassword || '')
+
+  if (!hasValidPassword) {
+    return
+  }
+
+  const secret = generateTotpSecret()
+  const otpAuthUrl = generateTotpUri({
+    issuer: 'Fructul Bucovinei',
+    label: user.email,
+    secret,
+  })
+  const qrCodeDataUrl = await QRCode.toDataURL(otpAuthUrl, {
+    margin: 1,
+    width: 240,
+  })
+  const db = getDbClient()
+
+  await db.execute(
+    'UPDATE users SET two_factor_pending_secret = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [secret, user.id]
+  )
+
+  sendJson(response, request, 200, {
+    qrCodeDataUrl,
+    manualKey: secret,
+    otpAuthUrl,
+  })
+}
+
+async function handleTwoFactorVerify(request, response) {
+  let body
+
+  try {
+    body = await parseJsonBody(request)
+  } catch {
+    sendError(response, request, 400, 'Cerere invalidă.')
+    return
+  }
+
+  const currentUser = await getSessionUser(request)
+
+  if (!currentUser) {
+    sendError(response, request, 401, 'Nu există o sesiune validă.')
+    return
+  }
+
+  const user = await getUserForTwoFactor(currentUser.id)
+  const code = normalizeTwoFactorCode(body.code)
+
+  if (!user || !user.two_factor_pending_secret) {
+    sendError(response, request, 400, 'Nu există o configurare 2FA în așteptare.')
+    return
+  }
+
+  if (!(await isValidTwoFactorCode(code, user.two_factor_pending_secret))) {
+    sendError(response, request, 401, 'Codul de autentificare este incorect.')
+    return
+  }
+
+  const db = getDbClient()
+  await db.execute(
+    `UPDATE users
+     SET two_factor_enabled = 1,
+         two_factor_secret = two_factor_pending_secret,
+         two_factor_pending_secret = NULL,
+         two_factor_enabled_at = NOW(),
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [user.id]
+  )
+
+  sendJson(response, request, 200, {
+    user: buildUserResponse({
+      ...user,
+      two_factor_enabled: 1,
+    }),
+    message: 'Autentificarea în 2 pași a fost activată.',
+  })
+}
+
+async function handleTwoFactorDisable(request, response) {
+  let body
+
+  try {
+    body = await parseJsonBody(request)
+  } catch {
+    sendError(response, request, 400, 'Cerere invalidă.')
+    return
+  }
+
+  const currentUser = await getSessionUser(request)
+
+  if (!currentUser) {
+    sendError(response, request, 401, 'Nu există o sesiune validă.')
+    return
+  }
+
+  const user = await getUserForTwoFactor(currentUser.id)
+
+  if (!user) {
+    sendError(response, request, 404, 'Contul nu a fost găsit.')
+    return
+  }
+
+  if (Number(user.two_factor_enabled || 0) !== 1 || !user.two_factor_secret) {
+    sendError(response, request, 400, 'Autentificarea în 2 pași nu este activă.')
+    return
+  }
+
+  const hasValidPassword = await requirePasswordForUser(response, request, user, body.currentPassword || '')
+
+  if (!hasValidPassword) {
+    return
+  }
+
+  const code = normalizeTwoFactorCode(body.code)
+
+  if (!(await isValidTwoFactorCode(code, user.two_factor_secret))) {
+    sendError(response, request, 401, 'Codul de autentificare este incorect.')
+    return
+  }
+
+  const db = getDbClient()
+  await db.execute(
+    `UPDATE users
+     SET two_factor_enabled = 0,
+         two_factor_secret = NULL,
+         two_factor_pending_secret = NULL,
+         two_factor_enabled_at = NULL,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [user.id]
+  )
+
+  sendJson(response, request, 200, {
+    user: buildUserResponse({
+      ...user,
+      two_factor_enabled: 0,
+    }),
+    message: 'Autentificarea în 2 pași a fost dezactivată.',
+  })
+}
+
+
+async function insertOrderAddress(connection, orderId, addressType, address) {
+  await connection.execute(
+    'INSERT INTO order_addresses (order_id, address_type, first_name, last_name, company, country, phone, street_address, address_extra, county, city, postal_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      orderId,
+      addressType,
+      address.firstName,
+      address.lastName,
+      address.company || null,
+      address.country,
+      address.phone,
+      address.streetAddress,
+      address.addressExtra || null,
+      address.county,
+      address.city,
+      address.postalCode,
+    ]
+  )
+}
+
+async function getHydratedOrder(db, order) {
+  const [items] = await db.execute(
+    'SELECT * FROM order_items WHERE order_id = ? ORDER BY id ASC',
+    [order.id]
+  )
+  const [addresses] = await db.execute(
+    'SELECT * FROM order_addresses WHERE order_id = ? ORDER BY id ASC',
+    [order.id]
+  )
+
+  return buildOrderResponse(order, items, addresses)
+}
+
+async function handleCreateOrder(request, response) {
+  let body
+
+  try {
+    body = await parseJsonBody(request)
+  } catch {
+    sendError(response, request, 400, 'Cerere invalidă.')
+    return
+  }
+
+  const currentUser = await getSessionUser(request)
+  const customerEmail = normalizeEmail(body.customerEmail || currentUser?.email)
+  const paymentMethod = body.paymentMethod === 'card' ? 'card' : 'cash'
+  const items = Array.isArray(body.items) ? body.items : []
+  const billingAddress = normalizeAddress(body.billingAddress)
+  const shippingAddress = body.shippingAddress
+    ? normalizeAddress(body.shippingAddress)
+    : billingAddress
+  const requestedDiscountCode = getRequiredString(body.discountCode).toUpperCase()
+  const discountPercent = getPromoDiscountPercent(requestedDiscountCode)
+  const discountCode = discountPercent > 0 ? requestedDiscountCode : ''
+  const customerNote = getRequiredString(body.customerNote) || null
+
+  if (!customerEmail) {
+    sendError(response, request, 400, 'Adresa de email este obligatorie.')
+    return
+  }
+
+  if (!body.termsAccepted) {
+    sendError(response, request, 400, 'Trebuie să accepți termenii și condițiile.')
+    return
+  }
+
+  if (items.length === 0) {
+    sendError(response, request, 400, 'Coșul este gol.')
+    return
+  }
+
+  if (!validateAddress(billingAddress)) {
+    sendError(response, request, 400, 'Completează toate câmpurile obligatorii pentru facturare.')
+    return
+  }
+
+  if (!validateAddress(shippingAddress)) {
+    sendError(response, request, 400, 'Completează toate câmpurile obligatorii pentru livrare.')
+    return
+  }
+
+  const db = getDbClient()
+  const connection = await db.getConnection()
+
+  try {
+    await connection.beginTransaction()
+
+    const preparedItems = []
+    let subtotalAmount = 0
+
+    for (const item of items) {
+      const quantity = Math.max(1, Math.floor(Number(item.quantity)) || 1)
+      const productSlug = normalizeProductSlug(item.slug)
+      const [productRows] = await connection.execute(
+        'SELECT id, slug, name, image, price, stock_quantity, status FROM products WHERE slug = ? LIMIT 1',
+        [productSlug]
+      )
+      const product = productRows[0]
+      const unitPrice = product ? Number(product.price) : parseAmount(item.price)
+      const productName = product?.name || getRequiredString(item.name)
+      const productImage = product?.image || getRequiredString(item.image) || null
+
+      if (!productName || unitPrice <= 0) {
+        throw new Error('Un produs din coș nu este valid.')
+      }
+
+      if (product) {
+        if (product.status !== 'active' || Number(product.stock_quantity) < quantity) {
+          throw new Error('Produsul ' + productName + ' nu are stoc suficient.')
+        }
+
+        const [stockUpdate] = await connection.execute(
+          'UPDATE products SET stock_quantity = stock_quantity - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND stock_quantity >= ?',
+          [quantity, product.id, quantity]
+        )
+
+        if (stockUpdate.affectedRows !== 1) {
+          throw new Error('Stocul produsului ' + productName + ' nu a putut fi actualizat.')
+        }
+      }
+
+      const lineTotal = unitPrice * quantity
+      subtotalAmount += lineTotal
+      preparedItems.push({
+        productId: product?.id || null,
+        productSlug,
+        productName,
+        productImage,
+        unitPrice,
+        quantity,
+        lineTotal,
+        productSnapshot: JSON.stringify(item),
+      })
+    }
+
+    const discountAmount = subtotalAmount * (discountPercent / 100)
+    const shippingAmount = 0
+    const totalAmount = subtotalAmount - discountAmount + shippingAmount
+    const paymentStatus = paymentMethod === 'card' ? 'pending' : 'pending'
+    const temporaryOrderNumber = `FBPENDING${Date.now()}${crypto.randomInt(1000, 9999)}`
+
+    const [orderResult] = await connection.execute(
+      'INSERT INTO orders (order_number, user_id, customer_email, status, payment_method, payment_status, currency, subtotal_amount, discount_code, discount_percent, discount_amount, shipping_amount, total_amount, customer_note, terms_accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+      [
+        temporaryOrderNumber,
+        currentUser?.id || null,
+        customerEmail,
+        'pending',
+        paymentMethod,
+        paymentStatus,
+        'RON',
+        subtotalAmount,
+        discountCode,
+        discountPercent,
+        discountAmount,
+        shippingAmount,
+        totalAmount,
+        customerNote,
+      ]
+    )
+
+    const orderId = orderResult.insertId
+    const orderNumber = buildOrderNumber(orderId)
+
+    await connection.execute(
+      'UPDATE orders SET order_number = ? WHERE id = ?',
+      [orderNumber, orderId]
+    )
+
+    for (const item of preparedItems) {
+      await connection.execute(
+        'INSERT INTO order_items (order_id, product_id, product_slug, product_name, product_image, unit_price, quantity, line_total, product_snapshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          orderId,
+          item.productId,
+          item.productSlug,
+          item.productName,
+          item.productImage,
+          item.unitPrice,
+          item.quantity,
+          item.lineTotal,
+          item.productSnapshot,
+        ]
+      )
+    }
+
+    await insertOrderAddress(connection, orderId, 'billing', billingAddress)
+    await insertOrderAddress(connection, orderId, 'shipping', shippingAddress)
+
+    const [createdRows] = await connection.execute(
+      'SELECT * FROM orders WHERE id = ? LIMIT 1',
+      [orderId]
+    )
+
+    await connection.commit()
+
+    const order = await getHydratedOrder(db, createdRows[0])
+    void sendOrderConfirmationMessage(order).catch((error) => {
+      console.error('Order confirmation email failed:', error)
+    })
+    sendJson(response, request, 201, { order })
+  } catch (error) {
+    await connection.rollback()
+    sendError(response, request, 400, error instanceof Error ? error.message : 'Comanda nu a putut fi salvată.')
+  } finally {
+    connection.release()
+  }
+}
+
+async function handleListPublicProducts(request, response) {
+  const url = new URL(request.url, 'http://localhost')
+  const slugs = (url.searchParams.get('slugs') || '')
+    .split(',')
+    .map((slug) => normalizeProductSlug(slug))
+    .filter(Boolean)
+  const db = getDbClient()
+
+  if (slugs.length > 0) {
+    const uniqueSlugs = [...new Set(slugs)]
+    const placeholders = uniqueSlugs.map(() => '?').join(', ')
+    const [products] = await db.execute(
+      'SELECT id, slug, name, description, image, price, stock_quantity, status, created_at, updated_at FROM products WHERE slug IN (' + placeholders + ')',
+      uniqueSlugs
+    )
+
+    sendJson(response, request, 200, {
+      products: products.map(buildProductResponse),
+    })
+    return
+  }
+
+  const [products] = await db.execute(
+    "SELECT id, slug, name, description, image, price, stock_quantity, status, created_at, updated_at FROM products WHERE status = 'active' ORDER BY id ASC"
+  )
+
+  sendJson(response, request, 200, {
+    products: products.map(buildProductResponse),
+  })
+}
+
+async function handleGetPublicProduct(request, response, productSlug) {
+  const slug = normalizeProductSlug(productSlug)
+
+  if (!slug) {
+    sendError(response, request, 400, 'Produs invalid.')
+    return
+  }
+
+  const db = getDbClient()
+  const [products] = await db.execute(
+    'SELECT id, slug, name, description, image, price, stock_quantity, status, created_at, updated_at FROM products WHERE slug = ? LIMIT 1',
+    [slug]
+  )
+  const product = products[0]
+
+  if (!product) {
+    sendError(response, request, 404, 'Produsul nu a fost găsit.')
+    return
+  }
+
+  sendJson(response, request, 200, {
+    product: buildProductResponse(product),
+  })
+}
+
+async function handleAdminListProducts(request, response) {
+  const currentUser = await requireAdminUser(request, response)
+
+  if (!currentUser) {
+    return
+  }
+
+  const db = getDbClient()
+  const [products] = await db.execute(
+    'SELECT id, slug, name, description, image, price, stock_quantity, status, created_at, updated_at FROM products ORDER BY id ASC'
+  )
+
+  sendJson(response, request, 200, {
+    products: products.map(buildProductResponse),
+  })
+}
+
+async function handleAdminUpdateProduct(request, response, productId) {
+  const currentUser = await requireAdminUser(request, response)
+
+  if (!currentUser) {
+    return
+  }
+
+  const normalizedProductId = Number.parseInt(String(productId || ''), 10)
+
+  if (!Number.isInteger(normalizedProductId) || normalizedProductId <= 0) {
+    sendError(response, request, 400, 'Produs invalid.')
+    return
+  }
+
+  const body = await parseJsonBody(request)
+  const stockQuantity = Number(body.stockQuantity)
+
+  if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
+    sendError(response, request, 400, 'Cantitatea trebuie să fie un număr întreg pozitiv.')
+    return
+  }
+
+  const db = getDbClient()
+  const [updateResult] = await db.execute(
+    'UPDATE products SET stock_quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [stockQuantity, normalizedProductId]
+  )
+
+  if (updateResult.affectedRows !== 1) {
+    sendError(response, request, 404, 'Produsul nu a fost găsit.')
+    return
+  }
+
+  const [rows] = await db.execute(
+    'SELECT id, slug, name, description, image, price, stock_quantity, status, created_at, updated_at FROM products WHERE id = ? LIMIT 1',
+    [normalizedProductId]
+  )
+
+  sendJson(response, request, 200, {
+    product: buildProductResponse(rows[0]),
+  })
+}
+
+async function handleAdminListOrders(request, response) {
+  const currentUser = await requireAdminUser(request, response)
+
+  if (!currentUser) {
+    return
+  }
+
+  const url = new URL(request.url, 'http://localhost')
+  const category = url.searchParams.get('category') === 'shipped' ? 'shipped' : 'received'
+  const page = Math.max(1, Number.parseInt(url.searchParams.get('page') || '1', 10) || 1)
+  const limit = Math.min(50, Math.max(1, Number.parseInt(url.searchParams.get('limit') || '10', 10) || 10))
+  const offset = (page - 1) * limit
+  const db = getDbClient()
+
+  const whereClause = category === 'shipped' ? 'status = ?' : 'status <> ?'
+  const whereParams = ['shipped']
+
+  const [countRows] = await db.execute(
+    `SELECT COUNT(*) AS total FROM orders WHERE ${whereClause}`,
+    whereParams
+  )
+
+  const total = Number(countRows[0]?.total || 0)
+  const [orders] = await db.execute(
+    `SELECT * FROM orders WHERE ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`,
+    whereParams
+  )
+
+  const hydratedOrders = []
+
+  for (const order of orders) {
+    hydratedOrders.push(await getHydratedOrder(db, order))
+  }
+
+  sendJson(response, request, 200, {
+    orders: hydratedOrders,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    },
+  })
+}
+
+async function handleAdminShipOrder(request, response, orderId) {
+  const currentUser = await requireAdminUser(request, response)
+
+  if (!currentUser) {
+    return
+  }
+
+  const normalizedOrderId = Number.parseInt(String(orderId || ''), 10)
+
+  if (!Number.isInteger(normalizedOrderId) || normalizedOrderId <= 0) {
+    sendError(response, request, 400, 'Comandă invalidă.')
+    return
+  }
+
+  const body = await parseJsonBody(request)
+  const awb = String(body.awb || '').trim()
+
+  if (!awb) {
+    sendError(response, request, 400, 'Completează AWB-ul înainte să marchezi comanda ca trimisă.')
+    return
+  }
+
+  if (awb.length > 100) {
+    sendError(response, request, 400, 'AWB-ul este prea lung.')
+    return
+  }
+
+  const db = getDbClient()
+  const [updateResult] = await db.execute(
+    "UPDATE orders SET status = 'shipped', awb = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    [awb, normalizedOrderId]
+  )
+
+  if (updateResult.affectedRows !== 1) {
+    sendError(response, request, 404, 'Comanda nu a fost găsită.')
+    return
+  }
+
+  const [rows] = await db.execute('SELECT * FROM orders WHERE id = ? LIMIT 1', [normalizedOrderId])
+  const order = await getHydratedOrder(db, rows[0])
+  void sendOrderShippedMessage(order).catch((error) => {
+    console.error('Order shipped email failed:', error)
+  })
+  sendJson(response, request, 200, { order })
+}
+
+async function handleListOrders(request, response) {
+  const currentUser = await getSessionUser(request)
+
+  if (!currentUser) {
+    sendError(response, request, 401, 'Trebuie să fii autentificat pentru a vedea comenzile.')
+    return
+  }
+
+  const db = getDbClient()
+  const isAdmin = currentUser.role === 'admin'
+  const [orders] = isAdmin
+    ? await db.execute('SELECT * FROM orders ORDER BY created_at DESC LIMIT 100')
+    : await db.execute('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 100', [currentUser.id])
+
+  const hydratedOrders = []
+
+  for (const order of orders) {
+    hydratedOrders.push(await getHydratedOrder(db, order))
+  }
+
+  sendJson(response, request, 200, { orders: hydratedOrders })
+}
+
+async function handleGetOrder(request, response, orderNumber) {
+  const currentUser = await getSessionUser(request)
+
+  if (!currentUser) {
+    sendError(response, request, 401, 'Trebuie să fii autentificat pentru a vedea comanda.')
+    return
+  }
+
+  const db = getDbClient()
+  const normalizedOrderNumber = normalizeOrderNumber(orderNumber)
+  const isAdmin = currentUser.role === 'admin'
+  const [orders] = isAdmin
+    ? await db.execute('SELECT * FROM orders WHERE order_number = ? LIMIT 1', [normalizedOrderNumber])
+    : await db.execute('SELECT * FROM orders WHERE order_number = ? AND user_id = ? LIMIT 1', [normalizedOrderNumber, currentUser.id])
+  const order = orders[0]
+
+  if (!order) {
+    sendError(response, request, 404, 'Comanda nu a fost găsită.')
+    return
+  }
+
+  sendJson(response, request, 200, { order: await getHydratedOrder(db, order) })
 }
 
 async function handleRequest(request, response) {
@@ -637,13 +2469,83 @@ async function handleRequest(request, response) {
       return
     }
 
+    if (!checkRateLimit(request, response, routePath)) {
+      return
+    }
+
+    if (request.method === 'GET' && routePath === '/api/products') {
+      await handleListPublicProducts(request, response)
+      return
+    }
+
+    if (request.method === 'GET' && routePath.startsWith('/api/products/')) {
+      await handleGetPublicProduct(request, response, routePath.replace('/api/products/', ''))
+      return
+    }
+
+    if (request.method === 'GET' && routePath === '/api/admin/products') {
+      await handleAdminListProducts(request, response)
+      return
+    }
+
+    if (request.method === 'PATCH' && routePath.startsWith('/api/admin/products/')) {
+      await handleAdminUpdateProduct(request, response, routePath.replace('/api/admin/products/', ''))
+      return
+    }
+
+    if (request.method === 'GET' && routePath === '/api/admin/orders') {
+      await handleAdminListOrders(request, response)
+      return
+    }
+
+    if (request.method === 'PATCH' && routePath.startsWith('/api/admin/orders/') && routePath.endsWith('/ship')) {
+      const orderId = routePath.replace('/api/admin/orders/', '').replace('/ship', '')
+      await handleAdminShipOrder(request, response, orderId)
+      return
+    }
+
+    if (request.method === 'GET' && routePath === '/api/orders') {
+      await handleListOrders(request, response)
+      return
+    }
+
+    if (request.method === 'POST' && routePath === '/api/orders') {
+      await handleCreateOrder(request, response)
+      return
+    }
+
+    if (request.method === 'GET' && routePath.startsWith('/api/orders/')) {
+      await handleGetOrder(request, response, routePath.replace('/api/orders/', ''))
+      return
+    }
+
     if (request.method === 'POST' && routePath === '/api/auth/register') {
       await handleRegister(request, response)
       return
     }
 
+    if (request.method === 'POST' && routePath === '/api/auth/verify-email') {
+      await handleVerifyEmail(request, response)
+      return
+    }
+
     if (request.method === 'POST' && routePath === '/api/auth/login') {
       await handleLogin(request, response)
+      return
+    }
+
+    if (request.method === 'POST' && routePath === '/api/auth/forgot-password') {
+      await handleForgotPassword(request, response)
+      return
+    }
+
+    if (request.method === 'POST' && routePath === '/api/auth/reset-password') {
+      await handleResetPassword(request, response)
+      return
+    }
+
+    if (request.method === 'POST' && routePath === '/api/auth/login/2fa') {
+      await handleTwoFactorLogin(request, response)
       return
     }
 
@@ -654,6 +2556,21 @@ async function handleRequest(request, response) {
 
     if (request.method === 'PATCH' && routePath === '/api/auth/me') {
       await handleAccountUpdate(request, response)
+      return
+    }
+
+    if (request.method === 'POST' && routePath === '/api/auth/2fa/setup') {
+      await handleTwoFactorSetup(request, response)
+      return
+    }
+
+    if (request.method === 'POST' && routePath === '/api/auth/2fa/verify') {
+      await handleTwoFactorVerify(request, response)
+      return
+    }
+
+    if (request.method === 'POST' && routePath === '/api/auth/2fa/disable') {
+      await handleTwoFactorDisable(request, response)
       return
     }
 

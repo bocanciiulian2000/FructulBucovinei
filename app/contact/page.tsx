@@ -15,8 +15,8 @@ const contactDetails = [
   {
     icon: Phone,
     label: 'Telefon',
-    value: '+40 700 000 000',
-    href: 'tel:+40700000000',
+    value: '+40 764 417 635',
+    href: 'tel:+40764417635',
   },
   {
     icon: Mail,

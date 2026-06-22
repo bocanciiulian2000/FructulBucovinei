@@ -7,7 +7,8 @@ const operatorDetails = [
   'CUI: 38785393',
   'Reg. Comerțului: J2018000165333',
   'Adresă sediu social: Sat Rădășeni, Str. Părului 1, județul Suceava, cod 727460',
-  'Contact: contact@fructulbucovinei.ro • +40 767 208 881',
+  'Contact: contact@fructulbucovinei.ro • +40 764 417 635',
+  'Retururi: retur@fructulbucovinei.ro',
 ]
 
 const deliverySections = [
@@ -45,7 +46,7 @@ const deliverySections = [
     content: [
       'Merele proaspete sunt ambalate în cutii sau lădițe rezistente, potrivite pentru protecția produselor la șocuri.',
       'Sucurile și produsele fragile beneficiază de protecție suplimentară, precum separatoare, carton ondulat sau alte materiale de ambalare.',
-      'La primire, te rugăm să verifici ambalajul. Dacă observi deteriorări vizibile, solicită curierului un proces-verbal de constatare și anunță-ne, de preferat în 24 de ore, cu fotografii ale coletului și produselor, la contact@fructulbucovinei.ro.',
+      'La primire, te rugăm să verifici ambalajul. Dacă observi deteriorări vizibile, solicită curierului un proces-verbal de constatare și anunță-ne, de preferat în 24 de ore, cu fotografii ale coletului și produselor, la retur@fructulbucovinei.ro.',
     ],
   },
   {
@@ -75,7 +76,7 @@ const returnSections = [
   {
     title: '9. Cum faci un retur pentru produsele eligibile',
     content: [
-      'Notifică-ne în termen de 14 zile de la primirea produselor, la contact@fructulbucovinei.ro sau la +40 767 208 881.',
+      'Notifică-ne în termen de 14 zile de la primirea produselor, la retur@fructulbucovinei.ro sau la +40 764 417 635.',
       'Ambalează produsele complet și în siguranță, ideal în ambalajul original, pentru a evita deteriorarea la transport.',
       'Expediază returul către FRUCTUL BUCOVINEI SRL, Sat Rădășeni, Str. Părului 1, județul Suceava, cod 727460.',
       'Costul returului este suportat de consumator, cu excepția cazurilor de neconformitate sau livrare eronată.',

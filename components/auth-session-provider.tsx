@@ -21,6 +21,8 @@ export type AuthUser = {
   firstName: string
   lastName: string
   email: string
+  role?: 'customer' | 'admin'
+  twoFactorEnabled?: boolean
 }
 
 type AuthSessionContextValue = {

@@ -29,6 +29,10 @@ export function AuthPanel({
   const [mode, setMode] = useState<AuthMode>(defaultMode)
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
+  const [twoFactorCode, setTwoFactorCode] = useState('')
+  const [twoFactorChallengeToken, setTwoFactorChallengeToken] = useState('')
   const [registerEmail, setRegisterEmail] = useState('')
   const [registerEmailConfirm, setRegisterEmailConfirm] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -42,6 +46,21 @@ export function AuthPanel({
   const [feedback, setFeedback] = useState('')
   const [feedbackTone, setFeedbackTone] = useState<'success' | 'error' | null>(null)
   const [error, setError] = useState('')
+
+  const switchMode = (nextMode: AuthMode) => {
+    if (nextMode === mode) {
+      return
+    }
+
+    setMode(nextMode)
+    setFeedback('')
+    setFeedbackTone(null)
+    setError('')
+    setTwoFactorCode('')
+    setTwoFactorChallengeToken('')
+    setIsForgotPasswordOpen(false)
+    setForgotPasswordEmail('')
+  }
 
   const handleAuthSuccess = (user: AuthUser, successMessage: string) => {
     setUser(user)
@@ -93,7 +112,17 @@ export function AuthPanel({
 
       const data = (await response.json()) as {
         user?: AuthUser
+        requiresTwoFactor?: boolean
+        challengeToken?: string
+        message?: string
         error?: string
+      }
+
+      if (response.ok && data.requiresTwoFactor && data.challengeToken) {
+        setTwoFactorChallengeToken(data.challengeToken)
+        setFeedback(data.message ?? 'Introdu codul din aplicația de autentificare.')
+        setFeedbackTone(null)
+        return
       }
 
       if (!response.ok || !data.user) {
@@ -101,6 +130,47 @@ export function AuthPanel({
       }
 
       handleAuthSuccess(data.user, 'Te-ai autentificat cu succes.')
+      void refreshSession()
+      if (redirectOnSuccess) {
+        redirectHome()
+      }
+    } catch (authError) {
+      setError(authError instanceof Error ? authError.message : 'A apărut o eroare.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleTwoFactorLogin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setIsSubmitting(true)
+    setError('')
+
+    try {
+      const response = await fetch(apiUrl('/api/auth/login/2fa'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          challengeToken: twoFactorChallengeToken,
+          code: twoFactorCode,
+        }),
+      })
+
+      const data = (await response.json()) as {
+        user?: AuthUser
+        error?: string
+      }
+
+      if (!response.ok || !data.user) {
+        throw new Error(data.error ?? 'Codul nu a putut fi verificat.')
+      }
+
+      handleAuthSuccess(data.user, 'Te-ai autentificat cu succes.')
+      setTwoFactorCode('')
+      setTwoFactorChallengeToken('')
       void refreshSession()
       if (redirectOnSuccess) {
         redirectHome()
@@ -138,22 +208,61 @@ export function AuthPanel({
       })
 
       const data = (await response.json()) as {
-        user?: AuthUser
+        message?: string
         error?: string
       }
 
-      if (!response.ok || !data.user) {
+      if (!response.ok) {
         throw new Error(data.error ?? 'Nu s-a putut crea contul.')
       }
 
-      handleAuthSuccess(
-        data.user,
-        'Contul tău a fost înregistrat cu succes!'
-      )
-      void refreshSession()
-      if (redirectOnSuccess) {
-        redirectHome()
+      setFeedback(data.message ?? 'Ți-am trimis un email de confirmare. Verifică inbox-ul pentru a activa contul.')
+      setFeedbackTone('success')
+      setFirstName('')
+      setLastName('')
+      setRegisterEmail('')
+      setRegisterEmailConfirm('')
+      setRegisterPassword('')
+      setRegisterPasswordConfirm('')
+      setTermsAccepted(false)
+    } catch (authError) {
+      setError(authError instanceof Error ? authError.message : 'A apărut o eroare.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleForgotPassword = async () => {
+    setIsSubmitting(true)
+    setFeedback('')
+    setFeedbackTone(null)
+    setError('')
+
+    try {
+      const response = await fetch(apiUrl('/api/auth/forgot-password'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: forgotPasswordEmail,
+        }),
+      })
+
+      const data = (await response.json()) as {
+        message?: string
+        error?: string
       }
+
+      if (!response.ok) {
+        throw new Error(data.error ?? 'Nu am putut trimite cererea de resetare.')
+      }
+
+      setFeedback(data.message ?? 'Dacă adresa de email este găsită la noi în sistem, vei primi un link de resetare pe email.')
+      setFeedbackTone('success')
+      setForgotPasswordEmail('')
+      setIsForgotPasswordOpen(false)
     } catch (authError) {
       setError(authError instanceof Error ? authError.message : 'A apărut o eroare.')
     } finally {
@@ -184,7 +293,7 @@ export function AuthPanel({
         <div className="inline-flex rounded-full border border-forest/10 bg-cream p-1">
           <button
             type="button"
-            onClick={() => setMode('login')}
+            onClick={() => switchMode('login')}
             className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wide transition-colors ${
               mode === 'login'
                 ? 'bg-burgundy text-cream'
@@ -195,7 +304,7 @@ export function AuthPanel({
           </button>
           <button
             type="button"
-            onClick={() => setMode('register')}
+            onClick={() => switchMode('register')}
             className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wide transition-colors ${
               mode === 'register'
                 ? 'bg-burgundy text-cream'
@@ -216,7 +325,7 @@ export function AuthPanel({
             </p>
           </div>
           <p className="mt-2 text-sm text-emerald-900/70">
-            Poți continua cumpărăturile și navigarea pe site.
+            Verifică inbox-ul pentru pașii următori.
           </p>
         </div>
       ) : null}
@@ -228,7 +337,42 @@ export function AuthPanel({
       ) : null}
 
       <div className="mt-6">
-        {mode === 'login' ? (
+        {mode === 'login' && twoFactorChallengeToken ? (
+          <form className="space-y-4" onSubmit={handleTwoFactorLogin}>
+            <div className="rounded-2xl border border-forest/10 bg-cream px-4 py-4 text-sm leading-relaxed text-forest/75">
+              Contul are autentificare în 2 pași activă. Introdu codul de 6 cifre din aplicația Authenticator.
+            </div>
+            <AuthField
+              label="Cod authenticator"
+              icon={<Lock size={15} />}
+              type="text"
+              value={twoFactorCode}
+              onChange={(value) => setTwoFactorCode(value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="123456"
+              required
+            />
+
+            <button
+              type="submit"
+              disabled={isSubmitting || twoFactorCode.length !== 6}
+              className="flex h-12 w-full items-center justify-center rounded-sm bg-burgundy px-5 text-xs font-bold uppercase tracking-wide text-cream transition-colors hover:bg-forest disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Verifică și autentifică-te
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTwoFactorChallengeToken('')
+                setTwoFactorCode('')
+                setFeedback('')
+                setError('')
+              }}
+              className="flex h-12 w-full items-center justify-center rounded-sm border border-forest/15 px-5 text-xs font-bold uppercase tracking-wide text-forest transition-colors hover:border-burgundy hover:text-burgundy"
+            >
+              Înapoi la autentificare
+            </button>
+          </form>
+        ) : mode === 'login' ? (
           <form className="space-y-4" onSubmit={handleLogin}>
             <AuthField
               label="Adresă email"
@@ -258,6 +402,49 @@ export function AuthPanel({
                 </button>
               }
             />
+
+            <div className="-mt-1 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsForgotPasswordOpen((current) => !current)
+                  setForgotPasswordEmail(loginEmail)
+                  setFeedback('')
+                  setFeedbackTone(null)
+                  setError('')
+                }}
+                className="text-sm font-semibold text-burgundy underline-offset-4 transition-colors hover:text-forest hover:underline"
+              >
+                Am uitat parola
+              </button>
+            </div>
+
+            {isForgotPasswordOpen ? (
+              <div className="rounded-2xl border border-forest/10 bg-cream px-4 py-4">
+                <p className="text-sm leading-relaxed text-forest/75">
+                  Introdu adresa de email asociată contului și îți trimitem un link de resetare valabil 30 de minute.
+                </p>
+                <div className="mt-4 space-y-4">
+                  <AuthField
+                    label="Adresă email"
+                    icon={<Mail size={15} />}
+                    type="email"
+                    value={forgotPasswordEmail}
+                    onChange={setForgotPasswordEmail}
+                    placeholder="nume@exemplu.ro"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={isSubmitting}
+                    className="flex h-11 w-full items-center justify-center rounded-sm border border-burgundy bg-burgundy px-5 text-xs font-bold uppercase tracking-wide text-cream transition-colors hover:bg-forest disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Trimite linkul de resetare
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
             <button
               type="submit"

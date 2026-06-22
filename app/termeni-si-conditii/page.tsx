@@ -8,7 +8,7 @@ const companyDetails = [
   'Înregistrată la Registrul Comerțului sub nr. J2018000165333',
   'CUI: 38785393',
   'E-mail: contact@fructulbucovinei.ro',
-  'Telefon: +40 767 208 881',
+  'Telefon: +40 764 417 635',
 ]
 
 const sections = [
@@ -53,7 +53,7 @@ const sections = [
     title: '7. Politica de retur',
     content: [
       'Conform legislației în vigoare, consumatorul poate avea dreptul de a se retrage din contract în termen de 14 zile calendaristice de la primirea produselor, acolo unde natura produsului permite acest lucru.',
-      'Pentru produse alimentare, perisabile sau produse realizate/personalizate conform solicitărilor clientului, dreptul de retur poate fi limitat conform legislației aplicabile. Pentru returnare, trimite o solicitare la contact@fructulbucovinei.ro, menționând numărul comenzii și produsul vizat.',
+      'Pentru produse alimentare, perisabile sau produse realizate/personalizate conform solicitărilor clientului, dreptul de retur poate fi limitat conform legislației aplicabile. Pentru returnare, trimite o solicitare la retur@fructulbucovinei.ro, menționând numărul comenzii și produsul vizat.',
       'Produsele returnate trebuie să fie în aceeași stare în care au fost primite, nedeteriorate, nefolosite și ambalate corespunzător. Costurile de transport pentru retur sunt suportate de client, cu excepția situațiilor în care produsul este defect sau a fost livrat greșit.',
     ],
   },

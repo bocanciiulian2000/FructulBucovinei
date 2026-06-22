@@ -3,8 +3,7 @@ import { notFound } from 'next/navigation'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Footer } from '@/components/footer'
 import { Navbar } from '@/components/navbar'
-import { PackagePurchaseControls } from '@/components/package-purchase-controls'
-import { TreePurposeField } from '@/components/tree-purpose-field'
+import { PackageStockPurchasePanel } from '@/components/package-stock-purchase-panel'
 import { adoptPackages } from '@/lib/adopt-packages'
 
 type PackageDetailsPageProps = {
@@ -26,6 +25,8 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
   if (!pkg) {
     notFound()
   }
+
+  const adoptionFormId = `adoption-details-${pkg.slug}`
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-cream text-forest">
@@ -88,73 +89,7 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
               {pkg.description}
             </p>
 
-            <div className="mt-8 space-y-5">
-              <div>
-                <div className="mt-2 flex items-center justify-between gap-4">
-                  <p className="text-2xl font-bold text-forest md:text-4xl">
-                    Preț: <span>{pkg.price}</span>
-                  </p>
-                  <p className="font-serif text-lg font-bold italic text-forest md:text-xl">
-                    În stoc
-                  </p>
-                </div>
-                <p className="mt-2 text-xs text-forest/70 md:text-base">
-                  (TVA inclus, transport inclus).
-                </p>
-              </div>
-
-              <div>
-                <h2 className="text-sm font-bold text-forest md:text-lg">
-                  Completează detaliile pentru certificatul de adopție:
-                </h2>
-
-                <div className="mt-4 space-y-4">
-                  <div>
-                    <label htmlFor="certificate-name" className="text-xs font-semibold text-forest md:text-sm">
-                      Cum vrei să apară numele pe certificatul de adopție?
-                    </label>
-                    <input
-                      id="certificate-name"
-                      type="text"
-                      placeholder="Popescu Andrei"
-                      required
-                      className="mt-2 h-12 w-full rounded-xl border border-forest/20 bg-cream px-4 text-sm text-forest outline-none transition-colors focus:border-burgundy md:text-base"
-                    />
-                  </div>
-
-                  <div>
-                      <label htmlFor="tree-name" className="text-xs font-semibold text-forest md:text-sm">
-                        Cum se va numi pomul tău?
-                      </label>
-                      <input
-                        id="tree-name"
-                        type="text"
-                        placeholder="Dobi"
-                        required
-                        className="mt-2 h-12 w-full rounded-xl border border-forest/20 bg-cream px-4 text-sm text-forest outline-none transition-colors focus:border-burgundy md:text-base"
-                      />
-                  </div>
-
-                  <TreePurposeField />
-
-                  <div>
-                    <label htmlFor="tree-message" className="text-xs font-semibold text-forest md:text-sm">
-                      Lasă un gând care să crească odată cu el (maxim 150 de caractere)
-                    </label>
-                    <textarea
-                      id="tree-message"
-                      placeholder="Acest mesaj va fi asociat pomului adoptat și va spune povestea lui."
-                      rows={4}
-                      maxLength={150}
-                      required
-                      className="mt-2 w-full resize-none rounded-xl border border-forest/20 bg-cream px-4 py-3 text-sm leading-relaxed text-forest outline-none transition-colors focus:border-burgundy md:text-base"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <PackagePurchaseControls pkg={pkg} />
-            </div>
+            <PackageStockPurchasePanel pkg={pkg} formId={adoptionFormId} />
           </div>
         </div>
       </section>

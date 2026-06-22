@@ -8,7 +8,7 @@ const companyDetails = [
   'Înregistrată la Registrul Comerțului sub nr. J2018000165333',
   'Cod unic de înregistrare: 38785393',
   'E-mail: contact@fructulbucovinei.ro',
-  'Telefon: +40 767 208 881',
+  'Telefon: +40 764 417 635',
 ]
 
 const privacySections = [
@@ -97,7 +97,7 @@ const cookieSections = [
   {
     title: '3. Exemple de instrumente utilizate',
     content: [
-      'În funcție de configurarea website-ului, pot fi utilizate instrumente precum Google Analytics, Meta Pixel, Google Ads sau alte servicii similare de analiză și marketing.',
+      'Website-ul utilizează Google Analytics prin Google tag G-RYDSYCNL3F, doar după exprimarea consimțământului pentru cookie-uri de analiză. Nu activăm cookie-uri de marketing sau remarketing fără acord explicit.',
     ],
   },
   {
@@ -109,13 +109,13 @@ const cookieSections = [
   {
     title: '5. Gestionarea cookie-urilor',
     content: [
-      'Îți poți modifica sau retrage consimțământul privind cookie-urile în orice moment, utilizând opțiunile disponibile în bannerul de cookie sau setările browserului. Dezactivarea anumitor cookie-uri poate afecta funcționarea unor secțiuni ale website-ului.',
+      'Îți poți modifica sau retrage consimțământul privind cookie-urile în orice moment, utilizând butonul "Cookie-uri" afișat pe site sau setările browserului. Dezactivarea cookie-urilor de analiză nu afectează funcționarea magazinului.',
     ],
   },
   {
     title: '6. Contact',
     content: [
-      'Pentru întrebări privind utilizarea cookie-urilor sau prelucrarea datelor personale, ne poți contacta la contact@fructulbucovinei.ro sau la +40 767 208 881.',
+      'Pentru întrebări privind utilizarea cookie-urilor sau prelucrarea datelor personale, ne poți contacta la contact@fructulbucovinei.ro sau la +40 764 417 635.',
     ],
   },
 ]
