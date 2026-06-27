@@ -69,17 +69,20 @@ export default function RootLayout({
                 ad_storage: 'denied',
                 ad_user_data: 'denied',
                 ad_personalization: 'denied',
-                wait_for_update: 500
+                personalization_storage: 'denied',
+                functionality_storage: 'granted',
+                security_storage: 'granted'
               });
             `,
           }}
         />
         <Script
+          id="google-analytics-script"
           src="https://www.googletagmanager.com/gtag/js?id=G-RYDSYCNL3F"
           strategy="afterInteractive"
         />
         <Script
-          id="google-analytics"
+          id="google-analytics-init"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `

@@ -1,7 +1,20 @@
 'use client'
 
-import Image from 'next/image'
 import { motion, useScroll, useTransform } from 'framer-motion'
+
+const heroWebpSrcSet = [
+  '/imagini_landing-page/poza_fructulbucovinei_hero-768.webp 768w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-960.webp 960w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-1280.webp 1280w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-1600.webp 1600w',
+].join(', ')
+
+const heroJpegSrcSet = [
+  '/imagini_landing-page/poza_fructulbucovinei_hero-768.jpg 768w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-960.jpg 960w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-1280.jpg 1280w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-1600.jpg 1600w',
+].join(', ')
 
 export function HeroSection() {
   const { scrollYProgress } = useScroll()
@@ -12,16 +25,32 @@ export function HeroSection() {
 
   return (
     <section className="relative h-[95vh] min-h-[630px] overflow-hidden">
+      <link
+        rel="preload"
+        as="image"
+        href="/imagini_landing-page/poza_fructulbucovinei_hero-1600.webp"
+        type="image/webp"
+        imageSrcSet={heroWebpSrcSet}
+        imageSizes="100vw"
+        fetchPriority="high"
+      />
+
       {/* Background Image with Parallax */}
       <motion.div className="absolute inset-0" style={{ y, scale }}>
-        <Image
-          src="/imagini_landing-page/poza_fructulbucovinei_hero.jpeg"
-          alt="Livada Fructul Bucovinei la răsărit"
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-        />
+        <picture className="block h-full w-full">
+          <source type="image/webp" srcSet={heroWebpSrcSet} sizes="100vw" />
+          <source type="image/jpeg" srcSet={heroJpegSrcSet} sizes="100vw" />
+          <img
+            src="/imagini_landing-page/poza_fructulbucovinei_hero-1600.jpg"
+            alt="Livada Fructul Bucovinei la răsărit"
+            width={1600}
+            height={1066}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            className="h-full w-full object-cover"
+          />
+        </picture>
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/20 to-forest/60" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,56,45,0.42)_0%,rgba(34,56,45,0.22)_38%,rgba(34,56,45,0.08)_68%,transparent_100%)]" />

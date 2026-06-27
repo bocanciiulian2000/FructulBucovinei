@@ -5,6 +5,20 @@ import Image from 'next/image'
 
 const storageKey = 'fructul-bucovinei-preview-access'
 
+const heroWebpSrcSet = [
+  '/imagini_landing-page/poza_fructulbucovinei_hero-768.webp 768w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-960.webp 960w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-1280.webp 1280w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-1600.webp 1600w',
+].join(', ')
+
+const heroJpegSrcSet = [
+  '/imagini_landing-page/poza_fructulbucovinei_hero-768.jpg 768w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-960.jpg 960w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-1280.jpg 1280w',
+  '/imagini_landing-page/poza_fructulbucovinei_hero-1600.jpg 1600w',
+].join(', ')
+
 type SiteLockProps = {
   children: ReactNode
 }
@@ -50,14 +64,29 @@ export function SiteLock({ children }: SiteLockProps) {
 function ComingSoon() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-forest text-cream">
-      <Image
-        src="/imagini_landing-page/poza_fructulbucovinei_hero.jpeg"
-        alt="Livada Fructul Bucovinei"
-        fill
-        priority
-        className="object-cover"
-        sizes="100vw"
+      <link
+        rel="preload"
+        as="image"
+        href="/imagini_landing-page/poza_fructulbucovinei_hero-1600.webp"
+        type="image/webp"
+        imageSrcSet={heroWebpSrcSet}
+        imageSizes="100vw"
+        fetchPriority="high"
       />
+      <picture className="absolute inset-0 block h-full w-full">
+        <source type="image/webp" srcSet={heroWebpSrcSet} sizes="100vw" />
+        <source type="image/jpeg" srcSet={heroJpegSrcSet} sizes="100vw" />
+        <img
+          src="/imagini_landing-page/poza_fructulbucovinei_hero-1600.jpg"
+          alt="Livada Fructul Bucovinei"
+          width={1600}
+          height={1066}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          className="h-full w-full object-cover"
+        />
+      </picture>
       <div className="absolute inset-0 bg-forest/55" />
       <div className="absolute inset-0 bg-gradient-to-b from-forest/30 via-transparent to-forest/75" />
 

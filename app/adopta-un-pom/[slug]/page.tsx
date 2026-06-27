@@ -1,8 +1,7 @@
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Footer } from '@/components/footer'
 import { Navbar } from '@/components/navbar'
+import { PackageImageGallery } from '@/components/package-image-gallery'
 import { PackageStockPurchasePanel } from '@/components/package-stock-purchase-panel'
 import { adoptPackages } from '@/lib/adopt-packages'
 
@@ -34,49 +33,11 @@ export default async function PackageDetailsPage({ params }: PackageDetailsPageP
 
       <section className="relative overflow-visible bg-cream px-4 pb-12 pt-32 md:px-6 md:pb-20 md:pt-36 lg:px-12">
         <div className="container mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.98fr_1.02fr] lg:items-start lg:gap-12">
-          <div>
-            <div className="relative aspect-[4/4.35] overflow-hidden rounded-3xl bg-[#fbf7ee] shadow-sm ring-1 ring-forest/10 md:aspect-square">
-              <Image
-                src={pkg.image}
-                alt={pkg.name}
-                fill
-                priority
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 48vw"
-              />
-              <button
-                type="button"
-                className="absolute left-4 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-cream/85 text-forest shadow-sm transition-colors hover:bg-burgundy hover:text-cream"
-                aria-label="Imaginea anterioară"
-              >
-                <ChevronLeft size={22} />
-              </button>
-              <button
-                type="button"
-                className="absolute right-4 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-cream/85 text-forest shadow-sm transition-colors hover:bg-burgundy hover:text-cream"
-                aria-label="Imaginea următoare"
-              >
-                <ChevronRight size={22} />
-              </button>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              {pkg.gallery.slice(1).map((image) => (
-                <div
-                  key={image}
-                  className="relative aspect-square overflow-hidden rounded-2xl bg-[#fbf7ee] shadow-sm ring-1 ring-forest/10"
-                >
-                  <Image
-                    src={image}
-                    alt={pkg.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 50vw, 24vw"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+          <PackageImageGallery
+            name={pkg.name}
+            image={pkg.image}
+            gallery={pkg.gallery}
+          />
 
           <div className="max-w-3xl rounded-3xl bg-[#fbf7ee] p-6 shadow-sm ring-1 ring-forest/10 md:p-8 lg:p-10">
             <p className="font-serif text-xl font-bold leading-none text-forest md:text-3xl">

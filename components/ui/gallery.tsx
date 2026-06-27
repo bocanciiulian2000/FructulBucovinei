@@ -8,6 +8,15 @@ import { cn } from '@/lib/utils'
 
 type Direction = 'left' | 'right'
 
+type PhotoAnimationState = {
+  x: string
+  y: string
+  order: number
+  activeOrder: number | null
+  isActive: boolean
+  spread: number
+}
+
 const photos = [
   {
     id: 1,
@@ -155,6 +164,11 @@ export const PhotoGallery = ({
 
   const displayedPhotos = isMobile ? mobilePhotos : photos
   const photoSize = isMobile ? 150 : 310
+  const activePhoto = activePhotoId
+    ? displayedPhotos.find((photo) => photo.id === activePhotoId)
+    : undefined
+  const activePhotoOrder = activePhoto?.order ?? null
+  const hoverSpread = isMobile ? 42 : 125
 
   const containerVariants = {
     hidden: { opacity: 1 },
@@ -174,19 +188,33 @@ export const PhotoGallery = ({
       rotate: 0,
       scale: 1,
     }),
-    visible: (custom: { x: string; y: string; order: number }) => ({
-      x: custom.x,
-      y: custom.y,
-      rotate: 0,
-      scale: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 70,
-        damping: 12,
-        mass: 1,
-        delay: custom.order * 0.15,
-      },
-    }),
+    visible: (custom: PhotoAnimationState) => {
+      const shouldMakeRoom =
+        custom.activeOrder !== null && !custom.isActive
+      const direction =
+        shouldMakeRoom && custom.order < custom.activeOrder ? -1 : 1
+      const baseX = Number.parseFloat(custom.x)
+      const targetX = shouldMakeRoom
+        ? `${baseX + direction * custom.spread}px`
+        : custom.x
+
+      return {
+        x: targetX,
+        y: custom.y,
+        rotate: 0,
+        scale: 1,
+        transition: {
+          type: 'spring',
+          stiffness: custom.activeOrder === null ? 70 : 120,
+          damping: custom.activeOrder === null ? 12 : 19,
+          mass: 0.9,
+          delay:
+            custom.activeOrder === null
+              ? custom.order * 0.15
+              : Math.abs(custom.order - custom.activeOrder) * 0.015,
+        },
+      }
+    },
   }
 
   return (
@@ -220,6 +248,9 @@ export const PhotoGallery = ({
                     x: isMobile ? photo.mobileX : photo.x,
                     y: isMobile ? photo.mobileY : photo.y,
                     order: photo.order,
+                    activeOrder: activePhotoOrder,
+                    isActive: activePhotoId === photo.id,
+                    spread: hoverSpread,
                   }}
                   onHoverStart={() => setActivePhotoId(photo.id)}
                   onHoverEnd={() => setActivePhotoId(null)}

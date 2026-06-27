@@ -34,6 +34,31 @@ type AuthSessionContextValue = {
 }
 
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null)
+const AUTH_SESSION_MARKER_KEY = 'fructul-bucovinei-has-auth-session'
+
+function hasAuthSessionMarker() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return window.localStorage.getItem(AUTH_SESSION_MARKER_KEY) === '1'
+}
+
+function setAuthSessionMarker() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(AUTH_SESSION_MARKER_KEY, '1')
+}
+
+function clearAuthSessionMarker() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.removeItem(AUTH_SESSION_MARKER_KEY)
+}
 
 function redirectHomeWithDelay() {
   window.setTimeout(() => {
@@ -45,6 +70,17 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const updateUser = useCallback((nextUser: AuthUser | null) => {
+    setUser(nextUser)
+
+    if (nextUser) {
+      setAuthSessionMarker()
+      return
+    }
+
+    clearAuthSessionMarker()
+  }, [])
+
   const refreshSession = useCallback(async () => {
     setLoading(true)
 
@@ -52,7 +88,12 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       const localDemoUser = getLocalDemoUser()
 
       if (localDemoUser) {
-        setUser(localDemoUser)
+        updateUser(localDemoUser)
+        return
+      }
+
+      if (!hasAuthSessionMarker()) {
+        setUser(null)
         return
       }
 
@@ -61,18 +102,18 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       })
 
       if (!response.ok) {
-        setUser(null)
+        updateUser(null)
         return
       }
 
       const data = (await response.json()) as { user?: AuthUser }
-      setUser(data.user ?? null)
+      updateUser(data.user ?? null)
     } catch {
-      setUser(null)
+      updateUser(null)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [updateUser])
 
   useEffect(() => {
     void refreshSession()
@@ -81,7 +122,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     if (isLocalDemoUser(user) || getLocalDemoUser()) {
       clearLocalDemoUser()
-      setUser(null)
+      updateUser(null)
       redirectHomeWithDelay()
       return
     }
@@ -92,20 +133,20 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         credentials: 'include',
       })
     } finally {
-      setUser(null)
+      updateUser(null)
       redirectHomeWithDelay()
     }
-  }, [user])
+  }, [updateUser, user])
 
   const value = useMemo(
     () => ({
       user,
       loading,
       refreshSession,
-      setUser,
+      setUser: updateUser,
       logout,
     }),
-    [loading, logout, refreshSession, user]
+    [loading, logout, refreshSession, updateUser, user]
   )
 
   return (

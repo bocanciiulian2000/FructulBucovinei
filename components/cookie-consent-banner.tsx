@@ -12,11 +12,90 @@ type StoredConsent = {
 }
 
 type GtagWindow = Window & {
-  dataLayer?: unknown[]
+  dataLayer?: IArguments[]
   gtag?: (...args: unknown[]) => void
+  [key: `ga-disable-${string}`]: boolean
 }
 
 const CONSENT_KEY = 'fructul-bucovinei-cookie-consent'
+const GOOGLE_ANALYTICS_ID = 'G-RYDSYCNL3F'
+const GOOGLE_ANALYTICS_SCRIPT_ID = 'google-analytics-script'
+
+function deleteCookie(name: string) {
+  const hostname = window.location.hostname
+  const domainParts = hostname.split('.')
+  const rootDomain = domainParts.length > 2 ? domainParts.slice(-2).join('.') : hostname
+  const domains = ['', hostname, `.${hostname}`, rootDomain, `.${rootDomain}`]
+
+  domains.forEach((domain) => {
+    document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax${domain ? `; domain=${domain}` : ''}`
+  })
+}
+
+function deleteGoogleAnalyticsCookies() {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  document.cookie
+    .split(';')
+    .map((cookie) => cookie.trim().split('=')[0])
+    .filter((name) => name === '_ga' || name.startsWith('_ga_') || name === '_gid' || name === '_gat')
+    .forEach(deleteCookie)
+}
+
+function getGtag() {
+  const gtagWindow = window as GtagWindow
+  gtagWindow.dataLayer = gtagWindow.dataLayer || []
+  gtagWindow.gtag =
+    gtagWindow.gtag ||
+    function gtag() {
+      gtagWindow.dataLayer?.push(arguments)
+    }
+
+  return gtagWindow.gtag
+}
+
+function updateGoogleConsentState(optionalStorage: 'granted' | 'denied') {
+  const gtag = getGtag()
+
+  gtag('consent', 'update', {
+    analytics_storage: optionalStorage,
+    ad_storage: optionalStorage,
+    ad_user_data: optionalStorage,
+    ad_personalization: optionalStorage,
+    personalization_storage: optionalStorage,
+    functionality_storage: 'granted',
+    security_storage: 'granted',
+  })
+}
+
+function initializeGoogleAnalytics() {
+  const gtagWindow = window as GtagWindow
+  gtagWindow[`ga-disable-${GOOGLE_ANALYTICS_ID}`] = false
+  updateGoogleConsentState('granted')
+
+  const sendPageView = () => {
+    gtagWindow.gtag?.('js', new Date())
+    gtagWindow.gtag?.('config', GOOGLE_ANALYTICS_ID, {
+      anonymize_ip: true,
+      page_path: window.location.pathname + window.location.search,
+    })
+  }
+
+  const existingScript = document.getElementById(GOOGLE_ANALYTICS_SCRIPT_ID) as HTMLScriptElement | null
+
+  if (existingScript) {
+    sendPageView()
+  } else {
+    const script = document.createElement('script')
+    script.id = GOOGLE_ANALYTICS_SCRIPT_ID
+    script.async = true
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`
+    script.addEventListener('load', sendPageView, { once: true })
+    document.head.appendChild(script)
+  }
+}
 
 function updateGoogleConsent(analytics: boolean) {
   if (typeof window === 'undefined') {
@@ -25,18 +104,15 @@ function updateGoogleConsent(analytics: boolean) {
 
   const gtagWindow = window as GtagWindow
 
-  gtagWindow.gtag?.('consent', 'update', {
-    analytics_storage: analytics ? 'granted' : 'denied',
-    ad_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
-  })
-
   if (analytics) {
-    gtagWindow.gtag?.('config', 'G-RYDSYCNL3F', {
-      page_path: window.location.pathname + window.location.search,
-    })
+    initializeGoogleAnalytics()
+    return
   }
+
+  gtagWindow[`ga-disable-${GOOGLE_ANALYTICS_ID}`] = true
+
+  updateGoogleConsentState('denied')
+  deleteGoogleAnalyticsCookies()
 }
 
 function readConsent(): StoredConsent | null {
@@ -124,7 +200,7 @@ export function CookieConsentBanner() {
                   Alegerea ta contează
                 </h2>
                 <p className="mt-3 max-w-3xl text-sm leading-relaxed text-forest/75 md:text-base">
-                  Folosim cookie-uri strict necesare pentru funcționarea site-ului. Cookie-urile de analiză, inclusiv Google Analytics, sunt folosite doar dacă îți dai acordul. Poți modifica sau retrage consimțământul oricând.
+                  Folosim cookie-uri strict necesare pentru funcționarea site-ului. Cookie-urile de analiză și personalizare, inclusiv Google Analytics, sunt folosite doar dacă îți dai acordul. Poți modifica sau retrage consimțământul oricând.
                 </p>
                 <Link
                   href="/politica-de-confidentialitate"
@@ -158,9 +234,9 @@ export function CookieConsentBanner() {
                         className="mt-1 size-4 rounded border-forest/30 text-burgundy focus:ring-burgundy"
                       />
                       <span>
-                        <span className="block text-sm font-bold text-forest">Cookie-uri de analiză</span>
+                        <span className="block text-sm font-bold text-forest">Cookie-uri de analiză și personalizare</span>
                         <span className="mt-1 block text-sm leading-relaxed text-forest/65">
-                          Ne ajută să înțelegem cum este folosit site-ul, prin Google Analytics.
+                          Ne ajută să înțelegem cum este folosit site-ul și să măsurăm performanța comunicării noastre.
                         </span>
                       </span>
                     </label>
