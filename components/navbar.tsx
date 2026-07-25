@@ -10,6 +10,8 @@ import { AuthPanel } from '@/components/auth-panel'
 import { useAuthSession } from '@/components/auth-session-provider'
 import {
   CART_UPDATED_EVENT,
+  CART_ITEM_ADDED_EVENT,
+  type CartAddAnimationPayload,
   formatCartPrice,
   getCartSubtotal,
   getCartQuantity,
@@ -43,6 +45,10 @@ type NavbarProps = {
   solid?: boolean
 }
 
+type FlyingCartItem = CartAddAnimationPayload & {
+  targetRect: CartAddAnimationPayload['sourceRect']
+}
+
 export function Navbar({ solid: _solid = false }: NavbarProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -55,8 +61,11 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromoCode, setAppliedPromoCode] = useState('')
   const [promoError, setPromoError] = useState('')
+  const [flyingCartItems, setFlyingCartItems] = useState<FlyingCartItem[]>([])
+  const [isCartBouncing, setIsCartBouncing] = useState(false)
   const [activeSection, setActiveSection] = useState('/')
   const accountMenuRef = useRef<HTMLDivElement>(null)
+  const cartButtonRef = useRef<HTMLButtonElement>(null)
   const { user, logout, loading } = useAuthSession()
   const isSolid = true
   const cartQuantity = getCartQuantity(cartItems)
@@ -156,6 +165,39 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
   }, [])
 
   useEffect(() => {
+    const handleCartItemAdded = (event: Event) => {
+      const detail = (event as CustomEvent<CartAddAnimationPayload>).detail
+      const cartRect = cartButtonRef.current?.getBoundingClientRect()
+
+      if (!detail || !cartRect) {
+        return
+      }
+
+      const flyingItem: FlyingCartItem = {
+        ...detail,
+        targetRect: {
+          left: cartRect.left,
+          top: cartRect.top,
+          width: cartRect.width,
+          height: cartRect.height,
+        },
+      }
+
+      setFlyingCartItems((currentItems) => [...currentItems, flyingItem])
+      setIsCartBouncing(true)
+
+      window.setTimeout(() => {
+        setFlyingCartItems((currentItems) => currentItems.filter((item) => item.id !== flyingItem.id))
+      }, 900)
+      window.setTimeout(() => setIsCartBouncing(false), 500)
+    }
+
+    window.addEventListener(CART_ITEM_ADDED_EVENT, handleCartItemAdded)
+
+    return () => window.removeEventListener(CART_ITEM_ADDED_EVENT, handleCartItemAdded)
+  }, [])
+
+  useEffect(() => {
     const syncPromoCode = () => {
       const code = readAppliedPromoCode()
       setAppliedPromoCode(code)
@@ -199,6 +241,34 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
 
   return (
     <>
+      <AnimatePresence>
+        {flyingCartItems.map((item) => (
+          <motion.div
+            key={item.id}
+            initial={{
+              left: item.sourceRect.left + item.sourceRect.width / 2 - 22,
+              top: item.sourceRect.top + item.sourceRect.height / 2 - 22,
+              opacity: 0,
+              scale: 0.65,
+              rotate: -8,
+            }}
+            animate={{
+              left: item.targetRect.left + item.targetRect.width / 2 - 18,
+              top: item.targetRect.top + item.targetRect.height / 2 - 18,
+              opacity: [0, 1, 1, 0],
+              scale: [0.65, 1.12, 0.9, 0.25],
+              rotate: [-8, 8, 0, 18],
+            }}
+            transition={{ duration: 0.82, ease: [0.22, 1, 0.36, 1] }}
+            className="pointer-events-none fixed z-[110] flex size-9 items-center justify-center overflow-visible rounded-full border-2 border-cream bg-burgundy p-1.5 shadow-[0_10px_30px_rgba(141,11,31,0.35)]"
+          >
+            <img src={item.image} alt="" className="size-full rounded-full object-cover" />
+            <span className="absolute -right-3 -top-3 flex size-5 items-center justify-center rounded-full bg-forest text-[10px] font-bold text-cream shadow-md">
+              +{item.quantity}
+            </span>
+          </motion.div>
+        ))}
+      </AnimatePresence>
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -363,12 +433,15 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                   )}
                 </AnimatePresence>
               </div>
-              <button
+              <motion.button
                 type="button"
+                ref={cartButtonRef}
                 onClick={() => {
                   setIsMobileMenuOpen(false)
                   setIsCartPreviewOpen(true)
                 }}
+                animate={isCartBouncing ? { scale: [1, 1.18, 0.94, 1] } : { scale: 1 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className={`relative flex p-2.5 rounded-full transition-all duration-300 ${
                   isSolid
                     ? 'text-forest/60 hover:text-burgundy hover:bg-forest/5' 
@@ -378,11 +451,16 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
               >
                 <ShoppingCart size={18} strokeWidth={1.5} />
                 {cartQuantity > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-burgundy px-1.5 text-[0.65rem] font-bold leading-none text-cream">
+                  <motion.span
+                    key={cartQuantity}
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-burgundy px-1.5 text-[0.65rem] font-bold leading-none text-cream"
+                  >
                     {cartQuantity}
-                  </span>
+                  </motion.span>
                 )}
-              </button>
+              </motion.button>
 
               {/* Mobile Menu Button */}
               <button

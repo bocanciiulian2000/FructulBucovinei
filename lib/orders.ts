@@ -62,6 +62,16 @@ export type CreateOrderPayload = {
   termsAccepted: boolean
 }
 
+export type NetopiaPayment = {
+  endpoint: string
+  fields: {
+    env_key: string
+    data: string
+    cipher: string
+    iv: string
+  }
+}
+
 async function parseApiResponse<T>(response: Response) {
   const data = (await response.json()) as T & { error?: string }
 
@@ -82,19 +92,32 @@ export async function createOrder(payload: CreateOrderPayload) {
     body: JSON.stringify(payload),
   })
 
-  return parseApiResponse<{ order: RemoteOrder }>(response)
+  return parseApiResponse<{
+    order: RemoteOrder
+    payment?: NetopiaPayment
+    paymentReturnToken?: string
+  }>(response)
 }
 
-export async function getOrders() {
-  const response = await fetch(apiUrl('/api/orders'), {
+export async function getOrders(page = 1, limit = 5) {
+  const response = await fetch(apiUrl(`/api/orders?page=${page}&limit=${limit}`), {
     credentials: 'include',
   })
 
-  return parseApiResponse<{ orders: RemoteOrder[] }>(response)
+  return parseApiResponse<{
+    orders: RemoteOrder[]
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      totalPages: number
+    }
+  }>(response)
 }
 
-export async function getOrder(orderNumber: string) {
-  const response = await fetch(apiUrl(`/api/orders/${encodeURIComponent(orderNumber)}`), {
+export async function getOrder(orderNumber: string, paymentToken?: string) {
+  const query = paymentToken ? `?paymentToken=${encodeURIComponent(paymentToken)}` : ''
+  const response = await fetch(apiUrl(`/api/orders/${encodeURIComponent(orderNumber)}${query}`), {
     credentials: 'include',
   })
 

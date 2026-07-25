@@ -45,16 +45,16 @@ const sections = [
   {
     title: '6. Livrare',
     content: [
-      'Livrarea produselor se face prin servicii de curierat sau prin alte metode comunicate clientului, pe teritoriul României. Timpul estimat de livrare este comunicat în procesul de comandă și poate varia în funcție de disponibilitatea produselor, sezon, condiții logistice sau perioade aglomerate.',
+      'Pachetele și componentele fizice incluse în programul „Adoptă un pom” se livrează prin FAN Courier, la adresa indicată de client, pe teritoriul României. Timpul estimat de livrare este comunicat în procesul de comandă și poate varia în funcție de sezon, condiții agricole, disponibilitatea recoltei, condiții logistice sau perioade aglomerate.',
       'Costul transportului este afișat în pagina de finalizare a comenzii înainte de trimiterea acesteia.',
     ],
   },
   {
     title: '7. Politica de retur',
     content: [
-      'Conform legislației în vigoare, consumatorul poate avea dreptul de a se retrage din contract în termen de 14 zile calendaristice de la primirea produselor, acolo unde natura produsului permite acest lucru.',
-      'Pentru produse alimentare, perisabile sau produse realizate/personalizate conform solicitărilor clientului, dreptul de retur poate fi limitat conform legislației aplicabile. Pentru returnare, trimite o solicitare la retur@fructulbucovinei.ro, menționând numărul comenzii și produsul vizat.',
-      'Produsele returnate trebuie să fie în aceeași stare în care au fost primite, nedeteriorate, nefolosite și ambalate corespunzător. Costurile de transport pentru retur sunt suportate de client, cu excepția situațiilor în care produsul este defect sau a fost livrat greșit.',
+      'Pe site se comercializează pachete de adopție a unui pom pentru o perioadă de un an, care pot include componente personalizate și produse rezultate la recoltare. Dreptul de retragere se aplică în condițiile și cu excepțiile prevăzute de legislația în vigoare, în funcție de natura componentei și de modul de executare a contractului.',
+      'Pentru produse personalizate, produse care se pot deteriora sau expira rapid și produse alimentare sigilate desigilate după livrare se aplică excepțiile legale de la dreptul de retragere. Aceste excepții nu afectează drepturile consumatorului în cazul produselor neconforme, deteriorate sau livrate greșit.',
+      'Pentru solicitări privind retragerea, neconformitatea sau livrarea, contactează retur@fructulbucovinei.ro și menționează numărul comenzii.',
     ],
   },
   {

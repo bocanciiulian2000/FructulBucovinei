@@ -28,7 +28,7 @@ const aboutParagraphs = [
 const cultivationSections = [
   {
     title: 'Ce cultivăm',
-    text: 'În livezile noastre cultivăm soiuri de mere alese pentru gust, prospețime și echilibru. Printre ele se află soiul x și Golden, două soiuri apreciate pentru aromă, textură și felul în care păstrează caracterul autentic al fructelor crescute în Bucovina. Fiecare pom este îngrijit cu atenție, iar recolta ajunge la tine curată, gustoasă și plină de poveste.',
+    text: 'În livezile noastre cultivăm soiuri de mere alese pentru gust, prospețime și echilibru. Printre ele se află Idared și Golden, două soiuri apreciate pentru aromă, textură și felul în care păstrează caracterul autentic al fructelor crescute în Bucovina. Fiecare pom este îngrijit cu atenție, iar recolta ajunge la tine curată, gustoasă și plină de poveste.',
   },
   {
     title: 'Standarde de calitate',

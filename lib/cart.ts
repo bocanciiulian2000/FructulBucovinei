@@ -2,6 +2,7 @@ import type { AdoptPackage } from '@/lib/adopt-packages'
 
 export const CART_STORAGE_KEY = 'fructul-bucovinei-cart'
 export const CART_UPDATED_EVENT = 'fructul-bucovinei-cart-updated'
+export const CART_ITEM_ADDED_EVENT = 'fructul-bucovinei-cart-item-added'
 
 export type AdoptionDetails = {
   certificateName: string
@@ -19,6 +20,43 @@ export type CartItem = {
   image: string
   quantity: number
   adoptionDetails?: AdoptionDetails
+}
+
+export type CartAddAnimationPayload = {
+  id: string
+  image: string
+  name: string
+  quantity: number
+  sourceRect: {
+    left: number
+    top: number
+    width: number
+    height: number
+  }
+}
+
+export function emitCartItemAdded(pkg: AdoptPackage, sourceElement: HTMLElement | null, quantity = 1) {
+  if (typeof window === 'undefined' || !sourceElement) {
+    return
+  }
+
+  const rect = sourceElement.getBoundingClientRect()
+  const payload: CartAddAnimationPayload = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    image: pkg.image,
+    name: pkg.name,
+    quantity,
+    sourceRect: {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+    },
+  }
+
+  window.dispatchEvent(new CustomEvent<CartAddAnimationPayload>(CART_ITEM_ADDED_EVENT, {
+    detail: payload,
+  }))
 }
 
 export function readCart(): CartItem[] {

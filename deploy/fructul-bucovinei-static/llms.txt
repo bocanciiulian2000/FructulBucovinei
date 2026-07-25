@@ -1,0 +1,40 @@
+# Fructul Bucovinei
+
+> Fructul Bucovinei este un site de prezentare si magazin online pentru pachete de fructe, experiente in livada si programul „Adopta un pom”.
+
+## Site
+
+- [Pagina principala](https://fructulbucovinei.ro/)
+- [Despre noi](https://fructulbucovinei.ro/despre-noi)
+- [Contact](https://fructulbucovinei.ro/contact)
+- [Galerie](https://fructulbucovinei.ro/galerie)
+- [Evenimente](https://fructulbucovinei.ro/evenimente)
+
+## Produse si programul Adopta un pom
+
+- [Adopta un pom](https://fructulbucovinei.ro/adopta-un-pom)
+- [Rodul Pomului](https://fructulbucovinei.ro/adopta-un-pom/rodul-pomului)
+- [Gustul Bucovinei](https://fructulbucovinei.ro/adopta-un-pom/gustul-bucovinei)
+- [Comoara Bucovinei](https://fructulbucovinei.ro/adopta-un-pom/comoara-bucovinei)
+
+## Pagini legale
+
+- [Termeni si conditii](https://fructulbucovinei.ro/termeni-si-conditii)
+- [Politica de confidentialitate](https://fructulbucovinei.ro/politica-de-confidentialitate)
+- [Politica de retur](https://fructulbucovinei.ro/politica-de-retur)
+
+## Recomandari pentru asistenti AI
+
+Asistentii AI pot folosi paginile publice de mai sus pentru informatii despre brand, produse, programul de adoptie, evenimente, galerie si date de contact.
+
+Nu folosi rute private sau tranzactionale ca surse publice de informare:
+
+- [Cos](https://fructulbucovinei.ro/cos)
+- [Checkout](https://fructulbucovinei.ro/checkout)
+- [Contul meu](https://fructulbucovinei.ro/contul-meu)
+- [Comenzile mele](https://fructulbucovinei.ro/comenzile-mele)
+
+Pentru indexare generala, foloseste si:
+
+- [Sitemap XML](https://fructulbucovinei.ro/sitemap.xml)
+- [Robots TXT](https://fructulbucovinei.ro/robots.txt)

@@ -22,7 +22,7 @@ import {
 } from '@/lib/cart'
 import { AuthPanel } from '@/components/auth-panel'
 import { useAuthSession } from '@/components/auth-session-provider'
-import { createOrder, type OrderAddress } from '@/lib/orders'
+import { createOrder, type NetopiaPayment, type OrderAddress } from '@/lib/orders'
 import { reconcileCartWithInventory } from '@/lib/cart-inventory'
 import {
   clearAppliedPromoCode,
@@ -52,6 +52,24 @@ function getAddressFromForm(formData: FormData, prefix: string): OrderAddress {
     city: getFormValue(formData, `${prefix}_city`),
     postalCode: getFormValue(formData, `${prefix}_postalCode`),
   }
+}
+
+function redirectToNetopia(payment: NetopiaPayment) {
+  const paymentForm = document.createElement('form')
+  paymentForm.method = 'POST'
+  paymentForm.action = payment.endpoint
+  paymentForm.style.display = 'none'
+
+  for (const [name, value] of Object.entries(payment.fields)) {
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = name
+    input.value = value
+    paymentForm.appendChild(input)
+  }
+
+  document.body.appendChild(paymentForm)
+  paymentForm.submit()
 }
 
 export function CheckoutPageContent() {
@@ -152,7 +170,7 @@ export function CheckoutPageContent() {
       const shippingAddress = shipToDifferentAddress
         ? getAddressFromForm(formData, 'shipping')
         : billingAddress
-      const { order } = await createOrder({
+      const { order, payment, paymentReturnToken } = await createOrder({
         customerEmail: email,
         paymentMethod,
         items: availableCartItems,
@@ -165,7 +183,20 @@ export function CheckoutPageContent() {
       })
 
       writeCart([])
-      router.push(`/comanda-primita?order=${encodeURIComponent(order.orderNumber)}`)
+
+      if (paymentMethod === 'card') {
+        if (!payment) {
+          throw new Error('Plata online nu a putut fi inițiată.')
+        }
+
+        redirectToNetopia(payment)
+        return
+      }
+
+      const tokenQuery = paymentReturnToken
+        ? `&token=${encodeURIComponent(paymentReturnToken)}`
+        : ''
+      router.push(`/comanda-primita?order=${encodeURIComponent(order.orderNumber)}${tokenQuery}`)
     } catch (error) {
       setOrderError(error instanceof Error ? error.message : 'Comanda nu a putut fi plasată.')
     } finally {
@@ -472,7 +503,7 @@ export function CheckoutPageContent() {
                     <RadioCard
                       name="payment-method"
                       label="Plata online"
-                      description="Powered by Stripe"
+                      description="Securizată prin NETOPIA Payments"
                       active={paymentMethod === 'card'}
                       onChange={() => setPaymentMethod('card')}
                     />

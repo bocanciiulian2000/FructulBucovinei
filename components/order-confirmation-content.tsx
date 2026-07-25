@@ -16,6 +16,7 @@ export function OrderConfirmationContent() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const currentOrderNumber = params.get('order') ?? ''
+    const paymentToken = params.get('token') ?? undefined
     setOrderNumber(currentOrderNumber)
 
     if (!currentOrderNumber) {
@@ -25,7 +26,7 @@ export function OrderConfirmationContent() {
     let isMounted = true
     setIsLoading(true)
 
-    getOrder(currentOrderNumber)
+    getOrder(currentOrderNumber, paymentToken)
       .then((data) => {
         if (isMounted) {
           setOrder(data.order)

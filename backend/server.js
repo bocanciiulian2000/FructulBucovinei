@@ -9,6 +9,13 @@ const {
   generateURI: generateTotpUri,
   verify: verifyTotpToken,
 } = require('otplib')
+const {
+  assertNetopiaConfigured,
+  buildConfirmationResponse,
+  createPaymentRequest,
+  decryptNotification,
+  parseNetopiaResponse,
+} = require('./netopia')
 
 let httpModule
 let usingUnitHttp = false
@@ -25,6 +32,8 @@ const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30
 const TWO_FACTOR_CHALLENGE_TTL_SECONDS = 60 * 5
 const EMAIL_VERIFICATION_TTL_MINUTES = 30
 const PASSWORD_RESET_TTL_MINUTES = 30
+const PAYMENT_RETURN_TTL_SECONDS = 60 * 60 * 24 * 7
+const FAN_COURIER_TRACKING_URL = 'https://www.fancourier.ro/awb-tracking/'
 
 let dbClient = null
 let mailTransporter = null
@@ -710,7 +719,11 @@ async function sendOrderShippedMessage(order) {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 22px;">
       ${renderInfoRows([
         { label: 'Număr comandă', value: `#${escapeHtml(order.orderNumber)}` },
-        { label: 'AWB', value: escapeHtml(order.awb) },
+        { label: 'Curier', value: 'FAN Courier' },
+        {
+          label: 'AWB',
+          value: `<a href="${FAN_COURIER_TRACKING_URL}" style="color:#8d0b1f; text-decoration:underline;">${escapeHtml(order.awb)}</a>`,
+        },
         { label: 'Status', value: 'Expediată' },
       ])}
     </table>
@@ -738,7 +751,9 @@ async function sendOrderShippedMessage(order) {
       'Bună,',
       '',
       `Comanda ta #${order.orderNumber} a fost expediată.`,
+      'Curier: FAN Courier',
       `AWB: ${order.awb}`,
+      `Verifică livrarea: ${FAN_COURIER_TRACKING_URL}`,
       '',
       'Produse expediate:',
       ...renderOrderItemsText(order),
@@ -754,7 +769,7 @@ async function sendOrderShippedMessage(order) {
       eyebrow: 'Comandă expediată',
       title: 'Comanda ta a fost expediată',
       greeting: 'Bună,',
-      intro: `Comanda <strong>#${escapeHtml(order.orderNumber)}</strong> a fost predată către curier. AWB-ul comenzii este <strong>${escapeHtml(order.awb)}</strong>.`,
+      intro: `Comanda <strong>#${escapeHtml(order.orderNumber)}</strong> a fost predată către curierul <strong>FAN Courier</strong>. AWB-ul comenzii este <strong>${escapeHtml(order.awb)}</strong>.`,
       contentHtml,
       note,
     }),
@@ -841,6 +856,47 @@ function createSessionToken(payload) {
     .digest('base64url')
 
   return `${serializedPayload}.${signature}`
+}
+
+function createPaymentReturnToken(orderNumber) {
+  const payload = toBase64Url(JSON.stringify({
+    orderNumber,
+    exp: Math.floor(Date.now() / 1000) + PAYMENT_RETURN_TTL_SECONDS,
+  }))
+  const signature = crypto
+    .createHmac('sha256', requiredEnv('AUTH_SECRET'))
+    .update(`payment-return:${payload}`)
+    .digest('base64url')
+
+  return `${payload}.${signature}`
+}
+
+function isValidPaymentReturnToken(orderNumber, token) {
+  const [payload, signature] = String(token || '').split('.')
+
+  if (!payload || !signature) {
+    return false
+  }
+
+  const expectedSignature = crypto
+    .createHmac('sha256', requiredEnv('AUTH_SECRET'))
+    .update(`payment-return:${payload}`)
+    .digest('base64url')
+
+  if (
+    signature.length !== expectedSignature.length ||
+    !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))
+  ) {
+    return false
+  }
+
+  try {
+    const tokenPayload = JSON.parse(fromBase64Url(payload))
+
+    return tokenPayload.orderNumber === orderNumber && tokenPayload.exp > Math.floor(Date.now() / 1000)
+  } catch {
+    return false
+  }
 }
 
 function createTwoFactorChallengeToken(payload) {
@@ -1158,6 +1214,28 @@ function parseJsonBody(request) {
       } catch {
         reject(new Error('Invalid JSON.'))
       }
+    })
+
+    request.on('error', reject)
+  })
+}
+
+function parseFormBody(request) {
+  return new Promise((resolve, reject) => {
+    let body = ''
+
+    request.on('data', (chunk) => {
+      body += chunk
+
+      if (body.length > 2 * 1024 * 1024) {
+        request.destroy()
+        reject(new Error('Body too large.'))
+      }
+    })
+
+    request.on('end', () => {
+      const params = new URLSearchParams(body)
+      resolve(Object.fromEntries(params.entries()))
     })
 
     request.on('error', reject)
@@ -2180,6 +2258,20 @@ async function handleCreateOrder(request, response) {
     return
   }
 
+  if (paymentMethod === 'card') {
+    try {
+      assertNetopiaConfigured()
+    } catch (error) {
+      sendError(
+        response,
+        request,
+        503,
+        error instanceof Error ? error.message : 'Plata online nu este configurată momentan.'
+      )
+      return
+    }
+  }
+
   const db = getDbClient()
   const connection = await db.getConnection()
 
@@ -2296,15 +2388,221 @@ async function handleCreateOrder(request, response) {
     await connection.commit()
 
     const order = await getHydratedOrder(db, createdRows[0])
-    void sendOrderConfirmationMessage(order).catch((error) => {
-      console.error('Order confirmation email failed:', error)
-    })
-    sendJson(response, request, 201, { order })
+    const paymentReturnToken = createPaymentReturnToken(order.orderNumber)
+    if (paymentMethod === 'cash') {
+      void sendOrderConfirmationMessage(order).catch((error) => {
+        console.error('Order confirmation email failed:', error)
+      })
+    }
+
+    if (paymentMethod === 'card') {
+      let payment
+
+      try {
+        payment = createPaymentRequest({
+          order,
+          billingAddress,
+          shippingAddress,
+          siteBaseUrl: getSiteBaseUrl(),
+          paymentReturnToken,
+        })
+      } catch (error) {
+        console.error('NETOPIA payment request failed:', error)
+        sendError(response, request, 503, 'Plata online nu a putut fi inițiată. Încearcă din nou.')
+        return
+      }
+
+      sendJson(response, request, 201, {
+        order,
+        payment,
+        paymentReturnToken,
+      })
+      return
+    }
+
+    sendJson(response, request, 201, { order, paymentReturnToken })
   } catch (error) {
     await connection.rollback()
     sendError(response, request, 400, error instanceof Error ? error.message : 'Comanda nu a putut fi salvată.')
   } finally {
     connection.release()
+  }
+}
+
+function sendNetopiaXml(response, xml, status = 200) {
+  response.writeHead(status, {
+    'Content-Type': 'application/xml; charset=utf-8',
+  })
+  response.end(xml)
+}
+
+function getNetopiaOrderUpdate(notification) {
+  if (notification.errorCode !== 0) {
+    return {
+      status: 'cancelled',
+      paymentStatus: 'failed',
+    }
+  }
+
+  if (notification.action === 'paid' || notification.action === 'confirmed') {
+    return {
+      status: 'confirmed',
+      paymentStatus: 'paid',
+    }
+  }
+
+  if (notification.action === 'credit') {
+    return {
+      status: 'refunded',
+      paymentStatus: 'refunded',
+    }
+  }
+
+  if (notification.action === 'canceled') {
+    return {
+      status: 'cancelled',
+      paymentStatus: 'failed',
+    }
+  }
+
+  return {
+    status: 'pending',
+    paymentStatus: 'pending',
+  }
+}
+
+async function restoreReservedOrderStock(db, orderId) {
+  const [items] = await db.execute(
+    'SELECT product_id, quantity FROM order_items WHERE order_id = ? AND product_id IS NOT NULL',
+    [orderId]
+  )
+
+  for (const item of items) {
+    await db.execute(
+      'UPDATE products SET stock_quantity = stock_quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [Number(item.quantity) || 0, item.product_id]
+    )
+  }
+}
+
+async function handleNetopiaConfirm(request, response) {
+  try {
+    const body = await parseFormBody(request)
+    const decryptedXml = decryptNotification({
+      envKey: body.env_key || body.envKey,
+      data: body.data,
+      cipher: body.cipher,
+      iv: body.iv,
+    })
+    const notification = parseNetopiaResponse(decryptedXml)
+
+    if (!notification.orderId) {
+      sendNetopiaXml(
+        response,
+        buildConfirmationResponse({
+          errorType: '2',
+          errorCode: '400',
+          message: 'Lipsește identificatorul comenzii.',
+        })
+      )
+      return
+    }
+
+    const db = getDbClient()
+    const [rows] = await db.execute(
+      'SELECT * FROM orders WHERE order_number = ? LIMIT 1',
+      [notification.orderId]
+    )
+    const order = rows[0]
+
+    if (!order) {
+      sendNetopiaXml(
+        response,
+        buildConfirmationResponse({
+          errorType: '2',
+          errorCode: '404',
+          message: 'Comanda nu a fost găsită.',
+        })
+      )
+      return
+    }
+
+    if (order.payment_method !== 'card') {
+      sendNetopiaXml(
+        response,
+        buildConfirmationResponse({
+          errorType: '2',
+          errorCode: '422',
+          message: 'Comanda nu este configurată pentru plata cu cardul.',
+        })
+      )
+      return
+    }
+
+    const reportedAmountText = notification.originalAmount || notification.processedAmount
+    const reportedAmount = reportedAmountText ? Number(reportedAmountText) : null
+    const orderAmount = Number(order.total_amount)
+
+    if (reportedAmount !== null && Number.isFinite(reportedAmount) && Math.abs(reportedAmount - orderAmount) > 0.01) {
+      sendNetopiaXml(
+        response,
+        buildConfirmationResponse({
+          errorType: '2',
+          errorCode: '422',
+          message: 'Valoarea plății nu corespunde comenzii.',
+        })
+      )
+      return
+    }
+
+    const update = getNetopiaOrderUpdate(notification)
+
+    const isFailedPayment = update.paymentStatus === 'failed'
+    let orderWasUpdated = false
+
+    if (isFailedPayment) {
+      const [updateResult] = await db.execute(
+        'UPDATE orders SET status = ?, payment_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND payment_status = \'pending\'',
+        [update.status, update.paymentStatus, order.id]
+      )
+      orderWasUpdated = updateResult.affectedRows === 1
+    } else if (order.status !== update.status || order.payment_status !== update.paymentStatus) {
+      const [updateResult] = await db.execute(
+        'UPDATE orders SET status = ?, payment_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [update.status, update.paymentStatus, order.id]
+      )
+      orderWasUpdated = updateResult.affectedRows === 1
+    }
+
+    if (isFailedPayment && orderWasUpdated) {
+      await restoreReservedOrderStock(db, order.id)
+    }
+
+    if (update.paymentStatus === 'paid' && orderWasUpdated) {
+      const [confirmedRows] = await db.execute(
+        'SELECT * FROM orders WHERE id = ? LIMIT 1',
+        [order.id]
+      )
+      const confirmedOrder = await getHydratedOrder(db, confirmedRows[0])
+      void sendOrderConfirmationMessage(confirmedOrder).catch((error) => {
+        console.error('Confirmed payment email failed:', error)
+      })
+    }
+
+    sendNetopiaXml(
+      response,
+      buildConfirmationResponse({ crc: notification.crc || notification.purchase || 'OK' })
+    )
+  } catch (error) {
+    console.error('NETOPIA confirmation failed:', error)
+    sendNetopiaXml(
+      response,
+      buildConfirmationResponse({
+        errorType: '1',
+        errorCode: '500',
+        message: 'Eroare temporară la procesarea notificării.',
+      })
+    )
   }
 }
 
@@ -2525,9 +2823,21 @@ async function handleListOrders(request, response) {
 
   const db = getDbClient()
   const isAdmin = currentUser.role === 'admin'
-  const [orders] = isAdmin
-    ? await db.execute('SELECT * FROM orders ORDER BY created_at DESC LIMIT 100')
-    : await db.execute('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 100', [currentUser.id])
+  const url = new URL(request.url, 'http://localhost')
+  const page = Math.max(1, Number.parseInt(url.searchParams.get('page') || '1', 10) || 1)
+  const limit = 5
+  const offset = (page - 1) * limit
+  const whereClause = isAdmin ? '1 = 1' : 'user_id = ?'
+  const whereParams = isAdmin ? [] : [currentUser.id]
+  const [countRows] = await db.execute(
+    `SELECT COUNT(*) AS total FROM orders WHERE ${whereClause}`,
+    whereParams
+  )
+  const total = Number(countRows[0]?.total || 0)
+  const [orders] = await db.execute(
+    `SELECT * FROM orders WHERE ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`,
+    whereParams
+  )
 
   const hydratedOrders = []
 
@@ -2535,23 +2845,38 @@ async function handleListOrders(request, response) {
     hydratedOrders.push(await getHydratedOrder(db, order))
   }
 
-  sendJson(response, request, 200, { orders: hydratedOrders })
+  sendJson(response, request, 200, {
+    orders: hydratedOrders,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    },
+  })
 }
 
 async function handleGetOrder(request, response, orderNumber) {
   const currentUser = await getSessionUser(request)
+  const url = new URL(request.url, 'http://localhost')
+  const normalizedOrderNumber = normalizeOrderNumber(orderNumber)
+  const hasPaymentToken = isValidPaymentReturnToken(
+    normalizedOrderNumber,
+    url.searchParams.get('paymentToken')
+  )
 
-  if (!currentUser) {
+  if (!currentUser && !hasPaymentToken) {
     sendError(response, request, 401, 'Trebuie să fii autentificat pentru a vedea comanda.')
     return
   }
 
   const db = getDbClient()
-  const normalizedOrderNumber = normalizeOrderNumber(orderNumber)
-  const isAdmin = currentUser.role === 'admin'
+  const isAdmin = currentUser?.role === 'admin'
   const [orders] = isAdmin
     ? await db.execute('SELECT * FROM orders WHERE order_number = ? LIMIT 1', [normalizedOrderNumber])
-    : await db.execute('SELECT * FROM orders WHERE order_number = ? AND user_id = ? LIMIT 1', [normalizedOrderNumber, currentUser.id])
+    : hasPaymentToken
+      ? await db.execute('SELECT * FROM orders WHERE order_number = ? LIMIT 1', [normalizedOrderNumber])
+      : await db.execute('SELECT * FROM orders WHERE order_number = ? AND user_id = ? LIMIT 1', [normalizedOrderNumber, currentUser.id])
   const order = orders[0]
 
   if (!order) {
@@ -2609,6 +2934,16 @@ async function handleRequest(request, response) {
     if (request.method === 'PATCH' && routePath.startsWith('/api/admin/orders/') && routePath.endsWith('/ship')) {
       const orderId = routePath.replace('/api/admin/orders/', '').replace('/ship', '')
       await handleAdminShipOrder(request, response, orderId)
+      return
+    }
+
+    if (request.method === 'GET' && routePath === '/api/payments/netopia/confirm') {
+      sendError(response, request, 405, 'Endpointul NETOPIA este un webhook POST și nu poate fi deschis direct în browser.')
+      return
+    }
+
+    if (request.method === 'POST' && routePath === '/api/payments/netopia/confirm') {
+      await handleNetopiaConfirm(request, response)
       return
     }
 

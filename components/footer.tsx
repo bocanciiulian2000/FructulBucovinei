@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import NTPLogo from 'ntp-logo-react'
 import {
   ArrowRight,
   Facebook,
@@ -139,6 +140,9 @@ export function Footer() {
             />
           </a>
         </div>
+        <div className="mt-5 flex justify-center">
+          <NTPLogo color="#ffffff" version="vertical" secret="167248" />
+        </div>
       </div>
 
       <div className="container relative z-30 mx-auto hidden px-6 pb-0 pt-10 lg:block lg:px-12 lg:pt-20">
@@ -262,6 +266,7 @@ export function Footer() {
                 className="h-auto w-56 lg:w-64"
               />
             </a>
+            <NTPLogo color="#ffffff" version="vertical" secret="167248" />
           </div>
         </div>
       </div>

@@ -64,7 +64,6 @@ export const adoptPackages = [
     includes: [
       '20 kg de mere',
       '3L suc de mere natural',
-      '1 sticlă de țuică/pălincă',
       'Adopția unui pom pentru 1 an',
       'Plăcuță personalizată cu numele și citatul familiei',
       'Certificat digital de adopție',
@@ -80,7 +79,7 @@ export const adoptPackages = [
     ],
     usefulDetails: [
       'Primești un pom adoptat pentru 1 an, cu nume și mesaj ales de tine',
-      'La final de sezon primești rodul lui (mere, suc natural și țuică/pălincă)',
+      'La final de sezon primești rodul lui (mere și suc natural)',
       'Primești actualizări foto de 2–3 ori pe an',
       'Primești o poveste personalizată din Bucovina, o vedere autentică și un album foto premium cu oameni și locuri',
       'Primești un coș cu produse reprezentative din Bucovina și o scrisoare semnată de familia Fructul Bucovinei',

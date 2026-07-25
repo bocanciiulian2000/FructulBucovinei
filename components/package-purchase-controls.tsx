@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
 import type { AdoptPackage } from '@/lib/adopt-packages'
-import { addPackageToCart, type AdoptionDetails } from '@/lib/cart'
+import { addPackageToCart, emitCartItemAdded, type AdoptionDetails } from '@/lib/cart'
 
 type PackagePurchaseControlsProps = {
   pkg: AdoptPackage
@@ -14,6 +14,7 @@ type PackagePurchaseControlsProps = {
 export function PackagePurchaseControls({ pkg, formId, isOutOfStock = false }: PackagePurchaseControlsProps) {
   const [quantity, setQuantity] = useState(1)
   const [wasAdded, setWasAdded] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   const decreaseQuantity = () => {
     setQuantity((currentQuantity) => Math.max(1, currentQuantity - 1))
@@ -63,6 +64,7 @@ export function PackagePurchaseControls({ pkg, formId, isOutOfStock = false }: P
     }
 
     addPackageToCart(pkg, quantity, adoptionDetails)
+    emitCartItemAdded(pkg, buttonRef.current, quantity)
     setWasAdded(true)
     window.setTimeout(() => setWasAdded(false), 1800)
   }
@@ -94,6 +96,7 @@ export function PackagePurchaseControls({ pkg, formId, isOutOfStock = false }: P
       ) : null}
 
       <button
+        ref={buttonRef}
         type="button"
         onClick={handleAddToCart}
         disabled={isOutOfStock}

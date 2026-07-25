@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { AdoptPackage } from '@/lib/adopt-packages'
-import { addPackageToCart } from '@/lib/cart'
+import { addPackageToCart, emitCartItemAdded } from '@/lib/cart'
 
 export function AddToCartButton({
   pkg,
@@ -12,15 +12,17 @@ export function AddToCartButton({
   className: string
 }) {
   const [wasAdded, setWasAdded] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   const handleAddToCart = () => {
     addPackageToCart(pkg)
+    emitCartItemAdded(pkg, buttonRef.current)
     setWasAdded(true)
     window.setTimeout(() => setWasAdded(false), 1800)
   }
 
   return (
-    <button type="button" onClick={handleAddToCart} className={className}>
+    <button ref={buttonRef} type="button" onClick={handleAddToCart} className={className}>
       {wasAdded ? 'Adăugat în coș' : 'Adaugă în coș'}
     </button>
   )

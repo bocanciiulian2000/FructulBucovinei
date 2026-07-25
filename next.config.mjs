@@ -18,7 +18,7 @@ const securityHeaders = [
       "object-src 'none'",
       scriptSrc,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      "img-src 'self' https://mny.ro data: blob:",
       "font-src 'self' data:",
       `connect-src ${connectSrc}`,
       "media-src 'self'",

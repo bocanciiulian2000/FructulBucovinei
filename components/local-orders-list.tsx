@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Package, ShoppingBag, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Package, ShoppingBag, X } from 'lucide-react'
 import { formatCartPrice, type CartItem } from '@/lib/cart'
 import { getOrders, type RemoteOrder, type RemoteOrderItem } from '@/lib/orders'
 
@@ -19,6 +19,13 @@ export function LocalOrdersList({
   const [selectedOrder, setSelectedOrder] = useState<RemoteOrder | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 5,
+    total: 0,
+    totalPages: 1,
+  })
 
   useEffect(() => {
     let isMounted = true
@@ -28,10 +35,11 @@ export function LocalOrdersList({
       setError('')
 
       try {
-        const data = await getOrders()
+        const data = await getOrders(page, 5)
 
         if (isMounted) {
           setOrders(data.orders)
+          setPagination(data.pagination)
         }
       } catch (loadError) {
         if (isMounted) {
@@ -49,7 +57,7 @@ export function LocalOrdersList({
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [page])
 
   if (isLoading) {
     return (
@@ -128,6 +136,32 @@ export function LocalOrdersList({
           </article>
         ))}
       </div>
+
+      {pagination.totalPages > 1 ? (
+        <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-forest/10 pt-5 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+            disabled={page <= 1 || isLoading}
+            className="inline-flex items-center gap-2 rounded-sm border border-forest/15 px-4 py-2 text-xs font-bold uppercase tracking-wide text-forest transition-colors hover:border-burgundy hover:text-burgundy disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft size={15} />
+            Pagina anterioară
+          </button>
+          <span className="text-sm font-semibold text-forest/65">
+            Pagina {pagination.page} din {pagination.totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((currentPage) => Math.min(pagination.totalPages, currentPage + 1))}
+            disabled={page >= pagination.totalPages || isLoading}
+            className="inline-flex items-center gap-2 rounded-sm border border-forest/15 px-4 py-2 text-xs font-bold uppercase tracking-wide text-forest transition-colors hover:border-burgundy hover:text-burgundy disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Pagina următoare
+            <ChevronRight size={15} />
+          </button>
+        </div>
+      ) : null}
 
       {selectedOrder && (
         <OrderDetailsModal

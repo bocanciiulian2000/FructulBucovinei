@@ -15,7 +15,7 @@ const deliverySections = [
   {
     title: '1. Metode de livrare',
     content: [
-      'Livrarea comenzilor se face prin curier, la adresa indicată de client în formularul de comandă. În funcție de disponibilitate și zonă, curierul folosit poate fi Cargus sau un alt partener de livrare comunicat înainte de expediere.',
+      'Pachetele și componentele fizice incluse în programul „Adoptă un pom” sunt livrate prin FAN Courier, la adresa indicată de client în formularul de comandă.',
     ],
   },
   {
@@ -59,46 +59,54 @@ const deliverySections = [
 
 const returnSections = [
   {
-    title: '7. Dreptul de retragere',
+    title: '7. Natura pachetelor de adopție',
     content: [
-      'Consumatorii, persoane fizice, pot renunța la cumpărare în termen de 14 zile calendaristice de la primirea produselor, fără a invoca un motiv, cu respectarea condițiilor și excepțiilor prevăzute de legislația aplicabilă.',
+      'Pe site se comercializează pachete de adopție a unui pom pentru o perioadă de un an. Pachetul este o experiență/serviciu de adopție care poate include, în funcție de oferta aleasă, plăcuță personalizată, certificat digital, actualizări, poveste personalizată și produse rezultate la recoltare.',
+      'Produsele fizice și beneficiile care fac parte din pachet sunt livrate ulterior, conform descrierii pachetului, sezonului agricol și condițiilor comunicate clientului.',
     ],
   },
   {
-    title: '8. Excepții importante pentru produse perisabile și sigilate',
+    title: '8. Dreptul de retragere',
     content: [
-      'Produsele care se pot deteriora sau expira rapid, precum merele proaspete, nu pot fi returnate în baza dreptului de retragere de 14 zile.',
-      'Produsele sigilate din motive de protecție a sănătății sau igienă, precum sucurile, nu pot fi returnate dacă au fost desigilate după livrare.',
-      'Sucurile nedesigilate se pot returna în termen de 14 zile, conform procedurii de retur de mai jos.',
-      'Aceste reguli se aplică și livrărilor aferente programului „Adoptă un pom”.',
+      'Consumatorii, persoane fizice, beneficiază, acolo unde legea nu prevede o excepție, de dreptul de retragere în termen de 14 zile calendaristice pentru contractele încheiate la distanță.',
+      'Dacă clientul solicită în mod expres începerea serviciului de adopție înainte de expirarea termenului de 14 zile, acesta va confirma solicitarea și faptul că a luat cunoștință de efectele legale ale începerii executării serviciului, conform legislației aplicabile.',
+      'Exercitarea dreptului de retragere nu afectează drepturile clientului în cazul produselor neconforme, deteriorate, livrate greșit sau lipsă din comandă.',
     ],
   },
   {
-    title: '9. Cum faci un retur pentru produsele eligibile',
+    title: '9. Anularea comenzii înainte de expediere',
     content: [
-      'Notifică-ne în termen de 14 zile de la primirea produselor, la retur@fructulbucovinei.ro sau la +40 764 417 635.',
-      'Ambalează produsele complet și în siguranță, ideal în ambalajul original, pentru a evita deteriorarea la transport.',
-      'Expediază returul către FRUCTUL BUCOVINEI SRL, Sat Rădășeni, Str. Părului 1, județul Suceava, cod 727460.',
-      'Costul returului este suportat de consumator, cu excepția cazurilor de neconformitate sau livrare eronată.',
-      'Te rugăm să păstrezi dovada de expediere până la finalizarea returului.',
+      'Clientul poate solicita anularea comenzii înainte ca pachetul să fie pregătit pentru livrare sau predat către FAN Courier, prin email la retur@fructulbucovinei.ro sau la +40 764 417 635. Solicitarea trebuie să includă numărul comenzii și datele folosite la plasarea acesteia.',
+      'Vom confirma dacă anularea mai poate fi procesată, în funcție de stadiul comenzii, de începerea serviciului de adopție și de realizarea componentelor personalizate.',
+      'Pentru comenzile achitate cu cardul și acceptate pentru anulare, rambursarea se face prin același mijloc de plată, conform termenelor legale aplicabile. Pentru comenzile cu plata la livrare, nu se percepe o sumă pentru o comandă anulată înainte de expediere.',
+      'După predarea coletului către FAN Courier, solicitarea nu mai este tratată ca anulare administrativă, ci, dacă este cazul, potrivit regulilor privind dreptul de retragere și excepțiile aplicabile componentelor pachetului.',
     ],
   },
   {
-    title: '10. Condiții pentru returul sucurilor nedesigilate',
+    title: '10. Excepții aplicabile componentelor pachetului',
     content: [
-      'Produsul trebuie să fie nedesigilat, neutilizat, cu eticheta intactă și fără urme de uzură.',
-      'Produsul trebuie returnat împreună cu toate accesoriile, bonusurile sau materialele primite, dacă acestea au fost incluse în comandă.',
+      'Dreptul de retragere nu se aplică produselor realizate sau personalizate clar după solicitările clientului, precum plăcuțele, poveștile sau alte materiale personalizate incluse în pachet.',
+      'Produsele de la recoltare care se pot deteriora sau expira rapid, precum merele proaspete, nu pot fi returnate în baza dreptului de retragere de 14 zile.',
+      'Produsele alimentare sigilate care nu pot fi returnate din motive de protecție a sănătății sau igienă nu pot fi returnate după desigilare. Aceste excepții nu înlătură drepturile legale privind neconformitatea produselor.',
     ],
   },
   {
-    title: '11. Rambursarea banilor',
+    title: '11. Cum soliciți retragerea sau o soluție pentru o comandă',
     content: [
-      'Rambursăm sumele plătite pentru produsele eligibile returnate în maximum 14 zile de la primirea produselor returnate sau de la primirea dovezii de expediere, după caz.',
+      'Pentru o solicitare de retragere sau pentru sesizarea unei probleme privind comanda, contactează-ne la retur@fructulbucovinei.ro sau la +40 764 417 635, menționând numărul comenzii.',
+      'Pentru componentele eligibile, produsele trebuie returnate complet și în siguranță, împreună cu accesoriile și materialele primite, dacă este cazul.',
+      'Costul returului este suportat de consumator pentru retragerea eligibilă, cu excepția cazurilor de neconformitate sau livrare eronată.',
+    ],
+  },
+  {
+    title: '12. Rambursarea',
+    content: [
+      'Pentru retragerile eligibile, rambursăm sumele plătite în maximum 14 zile de la data la care primim notificarea, cu respectarea condițiilor legale aplicabile și a dreptului de a amâna rambursarea până la primirea produselor sau a dovezii de expediere, după caz.',
       'Rambursarea se face prin același mijloc de plată folosit la comandă, dacă nu agreăm altfel în scris.',
     ],
   },
   {
-    title: '12. Produse neconforme sau deteriorate la primire',
+    title: '13. Produse neconforme sau deteriorate la primire',
     content: [
       'Dacă primești produse neconforme, deteriorate sau lipsă din comandă, anunță-ne de preferat în 24 de ore de la livrare, cu fotografii clare ale produselor și ambalajului.',
       'În funcție de situație, poți opta pentru înlocuire, completarea produselor lipsă sau rambursare. În aceste cazuri, costurile de transport sunt suportate de Fructul Bucovinei.',
