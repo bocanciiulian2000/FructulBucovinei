@@ -3,7 +3,6 @@ import Script from 'next/script'
 import { Cormorant_Garamond, Manrope } from 'next/font/google'
 import { AuthSessionProvider } from '@/components/auth-session-provider'
 import { SmoothScrollProvider } from '@/components/smooth-scroll-provider'
-import { SiteLock } from '@/components/site-lock'
 import { CookieConsentBanner } from '@/components/cookie-consent-banner'
 import './globals.css'
 
@@ -95,7 +94,7 @@ export default function RootLayout({
         />
         <SmoothScrollProvider>
           <AuthSessionProvider>
-            <SiteLock>{children}</SiteLock>
+            {children}
           </AuthSessionProvider>
         </SmoothScrollProvider>
         <CookieConsentBanner />

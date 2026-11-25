@@ -22,6 +22,7 @@ import {
 } from '@/lib/cart'
 import { ADMIN_DASHBOARD_PATH } from '@/lib/admin-path'
 import { reconcileCartWithInventory } from '@/lib/cart-inventory'
+import { ONLINE_ORDERS_ENABLED } from '@/lib/store-config'
 import {
   clearAppliedPromoCode,
   getPromoDiscountAmount,
@@ -381,10 +382,7 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                       className="fixed right-4 top-24 z-[90] mt-0 w-[calc(100vw-2rem)] max-w-72 overflow-hidden rounded-2xl border border-forest/10 bg-cream p-2 shadow-2xl sm:right-6 md:absolute md:right-0 md:top-full md:mt-3 md:w-64"
                     >
                       <div className="px-4 py-3">
-                        <p className="text-xs font-bold uppercase tracking-wide text-brown">
-                          Cont conectat
-                        </p>
-                        <p className="mt-1 truncate text-sm font-semibold text-forest">
+                        <p className="truncate text-base font-bold text-forest">
                           {loading ? 'Se verifică...' : `${user.firstName} ${user.lastName}`}
                         </p>
                       </div>
@@ -437,16 +435,23 @@ export function Navbar({ solid: _solid = false }: NavbarProps) {
                 type="button"
                 ref={cartButtonRef}
                 onClick={() => {
+                  if (!ONLINE_ORDERS_ENABLED) {
+                    return
+                  }
+
                   setIsMobileMenuOpen(false)
                   setIsCartPreviewOpen(true)
                 }}
+                disabled={!ONLINE_ORDERS_ENABLED}
+                aria-disabled={!ONLINE_ORDERS_ENABLED}
+                title={!ONLINE_ORDERS_ENABLED ? 'Comenzile online vor fi disponibile în curând' : 'Coș de cumpărături'}
                 animate={isCartBouncing ? { scale: [1, 1.18, 0.94, 1] } : { scale: 1 }}
                 transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 className={`relative flex p-2.5 rounded-full transition-all duration-300 ${
                   isSolid
                     ? 'text-forest/60 hover:text-burgundy hover:bg-forest/5' 
                     : 'text-cream/70 hover:text-cream hover:bg-cream/10'
-                }`}
+                } ${!ONLINE_ORDERS_ENABLED ? 'cursor-not-allowed opacity-60' : ''}`}
                 aria-label="Coș de cumpărături"
               >
                 <ShoppingCart size={18} strokeWidth={1.5} />

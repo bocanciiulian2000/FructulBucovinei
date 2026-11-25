@@ -2220,6 +2220,11 @@ async function handleCreateOrder(request, response) {
     return
   }
 
+  if (body.paymentMethod != null && body.paymentMethod !== 'cash') {
+    sendError(response, request, 400, 'Momentan este disponibilă doar plata ramburs, la livrare.')
+    return
+  }
+
   const currentUser = await getSessionUser(request)
   const customerEmail = normalizeEmail(body.customerEmail || currentUser?.email)
   const paymentMethod = body.paymentMethod === 'card' ? 'card' : 'cash'

@@ -39,7 +39,7 @@ const sections = [
     title: '5. Comenzi și plată',
     content: [
       'Pentru plasarea unei comenzi, clientul trebuie să completeze formularul de comandă cu date reale, corecte și complete. După trimiterea comenzii, clientul poate primi o confirmare automată pe e-mail sau poate fi contactat pentru confirmarea detaliilor.',
-      'Plata produselor se poate face ramburs, la livrare, sau online cu cardul, printr-un procesator de plăți securizat, în funcție de opțiunile disponibile pe site la momentul comenzii. Fructul Bucovinei nu stochează datele cardului tău.',
+      'Momentan, plata comenzilor se face ramburs, la livrare.',
     ],
   },
   {

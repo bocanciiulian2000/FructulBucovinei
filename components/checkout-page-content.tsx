@@ -22,7 +22,7 @@ import {
 } from '@/lib/cart'
 import { AuthPanel } from '@/components/auth-panel'
 import { useAuthSession } from '@/components/auth-session-provider'
-import { createOrder, type NetopiaPayment, type OrderAddress } from '@/lib/orders'
+import { createOrder, type OrderAddress } from '@/lib/orders'
 import { reconcileCartWithInventory } from '@/lib/cart-inventory'
 import {
   clearAppliedPromoCode,
@@ -54,24 +54,6 @@ function getAddressFromForm(formData: FormData, prefix: string): OrderAddress {
   }
 }
 
-function redirectToNetopia(payment: NetopiaPayment) {
-  const paymentForm = document.createElement('form')
-  paymentForm.method = 'POST'
-  paymentForm.action = payment.endpoint
-  paymentForm.style.display = 'none'
-
-  for (const [name, value] of Object.entries(payment.fields)) {
-    const input = document.createElement('input')
-    input.type = 'hidden'
-    input.name = name
-    input.value = value
-    paymentForm.appendChild(input)
-  }
-
-  document.body.appendChild(paymentForm)
-  paymentForm.submit()
-}
-
 export function CheckoutPageContent() {
   const router = useRouter()
   const { user } = useAuthSession()
@@ -79,7 +61,7 @@ export function CheckoutPageContent() {
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState('')
   const [couponMessage, setCouponMessage] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash')
+  const paymentMethod = 'cash'
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [shipToDifferentAddress, setShipToDifferentAddress] = useState(false)
@@ -170,7 +152,7 @@ export function CheckoutPageContent() {
       const shippingAddress = shipToDifferentAddress
         ? getAddressFromForm(formData, 'shipping')
         : billingAddress
-      const { order, payment, paymentReturnToken } = await createOrder({
+      const { order, paymentReturnToken } = await createOrder({
         customerEmail: email,
         paymentMethod,
         items: availableCartItems,
@@ -183,15 +165,6 @@ export function CheckoutPageContent() {
       })
 
       writeCart([])
-
-      if (paymentMethod === 'card') {
-        if (!payment) {
-          throw new Error('Plata online nu a putut fi inițiată.')
-        }
-
-        redirectToNetopia(payment)
-        return
-      }
 
       const tokenQuery = paymentReturnToken
         ? `&token=${encodeURIComponent(paymentReturnToken)}`
@@ -488,7 +461,7 @@ export function CheckoutPageContent() {
                     Cum plătești
                   </h3>
                   <p className="mt-3 text-sm leading-relaxed text-forest/65">
-                    Toate tranzacțiile sunt sigure și criptate.
+                    Momentan este disponibilă doar plata ramburs, la livrare.
                   </p>
 
                   <div className="mt-5 space-y-3">
@@ -497,15 +470,7 @@ export function CheckoutPageContent() {
                       label="Numerar la livrare"
                       description="Plătești când ajunge coletul."
                       defaultChecked
-                      active={paymentMethod === 'cash'}
-                      onChange={() => setPaymentMethod('cash')}
-                    />
-                    <RadioCard
-                      name="payment-method"
-                      label="Plata online"
-                      description="Securizată prin NETOPIA Payments"
-                      active={paymentMethod === 'card'}
-                      onChange={() => setPaymentMethod('card')}
+                      active
                     />
                   </div>
 

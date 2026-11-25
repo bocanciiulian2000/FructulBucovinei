@@ -13,7 +13,6 @@ import { AuthPanel } from '@/components/auth-panel'
 import { LocalOrdersList } from '@/components/local-orders-list'
 import { useAuthSession, type AuthUser } from '@/components/auth-session-provider'
 import { apiUrl } from '@/lib/api-url'
-import { isLocalDemoUser, saveLocalDemoUser } from '@/lib/local-demo-auth'
 
 type AccountSection = 'details' | 'settings' | 'orders'
 
@@ -87,25 +86,6 @@ export function AccountDashboard() {
     setEmailError('')
 
     try {
-      if (isLocalDemoUser(user)) {
-        if (!email || !emailConfirm || email !== emailConfirm) {
-          throw new Error('Adresele de email nu coincid.')
-        }
-
-        const updatedUser = {
-          ...user,
-          email,
-        } as AuthUser & { id: 'local-demo' }
-
-        saveLocalDemoUser(updatedUser)
-        setUser(updatedUser)
-        setEmailFeedback('Emailul contului demo local a fost actualizat.')
-        setEmail('')
-        setEmailConfirm('')
-        setEmailPassword('')
-        return
-      }
-
       const response = await fetch(apiUrl('/api/auth/me'), {
         method: 'PATCH',
         headers: {
@@ -150,18 +130,6 @@ export function AccountDashboard() {
     setPasswordError('')
 
     try {
-      if (isLocalDemoUser(user)) {
-        if (!password || !passwordConfirm || password !== passwordConfirm) {
-          throw new Error('Parolele noi nu coincid.')
-        }
-
-        setPasswordFeedback('Parola contului demo local a fost actualizată pentru test.')
-        setPassword('')
-        setPasswordConfirm('')
-        setPasswordCurrent('')
-        return
-      }
-
       const response = await fetch(apiUrl('/api/auth/me'), {
         method: 'PATCH',
         headers: {
@@ -206,10 +174,6 @@ export function AccountDashboard() {
     setTwoFactorError('')
 
     try {
-      if (isLocalDemoUser(user)) {
-        throw new Error('2FA nu este disponibil pentru contul demo local.')
-      }
-
       const response = await fetch(apiUrl('/api/auth/2fa/setup'), {
         method: 'POST',
         headers: {
@@ -281,10 +245,6 @@ export function AccountDashboard() {
     setTwoFactorError('')
 
     try {
-      if (isLocalDemoUser(user)) {
-        throw new Error('2FA nu este disponibil pentru contul demo local.')
-      }
-
       const response = await fetch(apiUrl('/api/auth/2fa/disable'), {
         method: 'POST',
         headers: {

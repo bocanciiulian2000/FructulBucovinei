@@ -10,11 +10,6 @@ import {
   type ReactNode,
 } from 'react'
 import { apiUrl } from '@/lib/api-url'
-import {
-  clearLocalDemoUser,
-  getLocalDemoUser,
-  isLocalDemoUser,
-} from '@/lib/local-demo-auth'
 
 export type AuthUser = {
   id: number | string
@@ -85,13 +80,6 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     setLoading(true)
 
     try {
-      const localDemoUser = getLocalDemoUser()
-
-      if (localDemoUser) {
-        updateUser(localDemoUser)
-        return
-      }
-
       if (!hasAuthSessionMarker()) {
         setUser(null)
         return
@@ -120,13 +108,6 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   }, [refreshSession])
 
   const logout = useCallback(async () => {
-    if (isLocalDemoUser(user) || getLocalDemoUser()) {
-      clearLocalDemoUser()
-      updateUser(null)
-      redirectHomeWithDelay()
-      return
-    }
-
     try {
       await fetch(apiUrl('/api/auth/logout'), {
         method: 'POST',
@@ -136,7 +117,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       updateUser(null)
       redirectHomeWithDelay()
     }
-  }, [updateUser, user])
+  }, [updateUser])
 
   const value = useMemo(
     () => ({

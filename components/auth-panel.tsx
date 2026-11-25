@@ -4,10 +4,6 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, Eye, EyeOff, Lock, Mail, UserRound } from 'lucide-react'
 import { apiUrl } from '@/lib/api-url'
-import {
-  LOCAL_DEMO_EMAIL,
-  loginLocalDemoUser,
-} from '@/lib/local-demo-auth'
 import { useAuthSession, type AuthUser } from '@/components/auth-session-provider'
 
 type AuthMode = 'login' | 'register'
@@ -84,20 +80,6 @@ export function AuthPanel({
     setError('')
 
     try {
-      const localDemoUser = loginLocalDemoUser(loginEmail, loginPassword)
-
-      if (localDemoUser) {
-        handleAuthSuccess(localDemoUser, 'Te-ai autentificat cu succes pe contul demo local.')
-        if (redirectOnSuccess) {
-          redirectHome()
-        }
-        return
-      }
-
-      if (loginEmail.trim().toLowerCase() === LOCAL_DEMO_EMAIL) {
-        throw new Error('Datele de autentificare pentru contul demo sunt incorecte.')
-      }
-
       const response = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: {

@@ -22,8 +22,8 @@ export const adoptPackages = [
       'Primești o poveste autentică din Bucovina și o vedere din zonă - poveștile pot vorbi despre viața simplă de la sat, legătura cu pământul și tradiții vechi păstrate în timp',
     ],
     price: '199,00 lei',
-    image: '/images/tree-apple.jpg',
-    gallery: ['/images/tree-apple.jpg', '/images/gallery-1.jpg', '/images/gallery-4.jpg'],
+    image: '/imagini_produse/Radacini/Fructul Bucovinei Apple Basket.png',
+    gallery: [],
   },
   {
     id: 2,
@@ -50,8 +50,8 @@ export const adoptPackages = [
       'Poveștile pot include momente din viața de zi cu zi: cum se fac poalele-n brâu, cum se merge la cosit, cum se strânge recolta sau cum se păstrează tradițiile din familie',
     ],
     price: '299,00 lei',
-    image: '/images/tree-pear.jpg',
-    gallery: ['/images/tree-pear.jpg', '/images/gallery-2.jpg', '/images/gallery-6.jpg'],
+    image: '/imagini_produse/Mostenire/Rustic Bucovinian Apple Harvest.png',
+    gallery: [],
   },
   {
     id: 3,
@@ -86,8 +86,8 @@ export const adoptPackages = [
       'Poveștile pot include momente din viața de zi cu zi: cum se fac poalele-n brâu, cum se merge la cosit, cum se strânge recolta sau cum se păstrează tradițiile din familie',
     ],
     price: '599,00 lei',
-    image: '/images/tree-plum.jpg',
-    gallery: ['/images/tree-plum.jpg', '/images/gallery-3.jpg', '/images/event-tasting.jpg'],
+    image: '/imagini_produse/Comoara_Bucovinei/Fructul Bucovinei Artisan Gift Baskets.png',
+    gallery: [],
   },
 ]
 

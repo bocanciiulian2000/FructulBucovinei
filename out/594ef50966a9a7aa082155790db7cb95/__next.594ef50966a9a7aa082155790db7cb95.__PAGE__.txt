@@ -1,7 +1,7 @@
 1:"$Sreact.fragment"
-2:I[63780,["/_next/static/chunks/17qduinmiu.dj.js","/_next/static/chunks/0d3shmwh5_nmn.js","/_next/static/chunks/016b6o95c~bp_.js","/_next/static/chunks/10dsn8u~md_a3.js","/_next/static/chunks/0ct~rx-3fc2eh.js"],"Navbar"]
-3:I[5948,["/_next/static/chunks/17qduinmiu.dj.js","/_next/static/chunks/0d3shmwh5_nmn.js","/_next/static/chunks/016b6o95c~bp_.js","/_next/static/chunks/10dsn8u~md_a3.js","/_next/static/chunks/0ct~rx-3fc2eh.js"],"AdminDashboard"]
-4:I[97367,["/_next/static/chunks/17qduinmiu.dj.js","/_next/static/chunks/0d3shmwh5_nmn.js","/_next/static/chunks/016b6o95c~bp_.js"],"OutletBoundary"]
+2:I[4143,["756","static/chunks/756-98a13f2d10827e2b.js","797","static/chunks/797-b415d5a37115497b.js","143","static/chunks/143-ae9dcafff19273f4.js","171","static/chunks/app/594ef50966a9a7aa082155790db7cb95/page-a5134ec3f948bad0.js"],"Navbar"]
+3:I[7391,["756","static/chunks/756-98a13f2d10827e2b.js","797","static/chunks/797-b415d5a37115497b.js","143","static/chunks/143-ae9dcafff19273f4.js","171","static/chunks/app/594ef50966a9a7aa082155790db7cb95/page-a5134ec3f948bad0.js"],"AdminDashboard"]
+4:I[484,[],"OutletBoundary"]
 5:"$Sreact.suspense"
-0:{"rsc":["$","$1","c",{"children":[["$","main",null,{"className":"min-h-screen bg-cream text-forest","children":[["$","$L2",null,{"solid":true}],["$","$L3",null,{}]]}],[["$","script","script-0",{"src":"/_next/static/chunks/10dsn8u~md_a3.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/0ct~rx-3fc2eh.js","async":true}]],["$","$L4",null,{"children":["$","$5",null,{"name":"Next.MetadataOutlet","children":"$@6"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"GNLIN6RqCgD_MwQUvybYP"}
+0:{"rsc":["$","$1","c",{"children":[["$","main",null,{"className":"min-h-screen bg-cream text-forest","children":[["$","$L2",null,{"solid":true}],["$","$L3",null,{}]]}],null,["$","$L4",null,{"children":["$","$5",null,{"name":"Next.MetadataOutlet","children":"$@6"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"7DuJWXPen_ve6QKpcqoCM"}
 6:null

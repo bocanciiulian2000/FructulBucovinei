@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
 import type { AdoptPackage } from '@/lib/adopt-packages'
 import { addPackageToCart, emitCartItemAdded, type AdoptionDetails } from '@/lib/cart'
+import { ONLINE_ORDERS_ENABLED } from '@/lib/store-config'
 
 type PackagePurchaseControlsProps = {
   pkg: AdoptPackage
@@ -53,7 +54,7 @@ export function PackagePurchaseControls({ pkg, formId, isOutOfStock = false }: P
   }
 
   const handleAddToCart = () => {
-    if (isOutOfStock) {
+    if (isOutOfStock || !ONLINE_ORDERS_ENABLED) {
       return
     }
 
@@ -76,6 +77,7 @@ export function PackagePurchaseControls({ pkg, formId, isOutOfStock = false }: P
         <button
           type="button"
           onClick={decreaseQuantity}
+          disabled={!ONLINE_ORDERS_ENABLED}
           className="flex items-center justify-center transition-colors hover:bg-burgundy hover:text-cream"
           aria-label="Scade cantitatea"
         >
@@ -87,6 +89,7 @@ export function PackagePurchaseControls({ pkg, formId, isOutOfStock = false }: P
         <button
           type="button"
           onClick={increaseQuantity}
+          disabled={!ONLINE_ORDERS_ENABLED}
           className="flex items-center justify-center transition-colors hover:bg-burgundy hover:text-cream"
           aria-label="Crește cantitatea"
         >
@@ -99,10 +102,10 @@ export function PackagePurchaseControls({ pkg, formId, isOutOfStock = false }: P
         ref={buttonRef}
         type="button"
         onClick={handleAddToCart}
-        disabled={isOutOfStock}
+        disabled={isOutOfStock || !ONLINE_ORDERS_ENABLED}
         className="h-14 rounded-xl bg-burgundy px-6 text-sm font-bold text-cream transition-colors hover:bg-forest disabled:cursor-not-allowed disabled:bg-forest/35 disabled:text-cream/80 md:text-base"
       >
-        {isOutOfStock ? 'Produsul nu este pe stoc' : wasAdded ? 'Adăugat în coș' : 'Adaugă în coș'}
+        {!ONLINE_ORDERS_ENABLED ? 'În curând' : isOutOfStock ? 'Produsul nu este pe stoc' : wasAdded ? 'Adăugat în coș' : 'Adaugă în coș'}
       </button>
     </div>
   )
